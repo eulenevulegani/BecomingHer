@@ -3,9 +3,11 @@
  * https://docs.expo.io/guides/color-schemes/
  */
 
+import { BlurView } from 'expo-blur';
 import { Text as DefaultText, View as DefaultView } from 'react-native';
 
 import Colors from '@/constants/Colors';
+import { Typography } from '@/constants/Typography';
 import { useColorScheme } from './useColorScheme';
 
 type ThemeProps = {
@@ -13,7 +15,10 @@ type ThemeProps = {
   darkColor?: string;
 };
 
-export type TextProps = ThemeProps & DefaultText['props'];
+export type TextProps = ThemeProps & DefaultText['props'] & {
+  variant?: 'serif' | 'sans';
+  weight?: 'regular' | 'medium' | 'bold';
+};
 export type ViewProps = ThemeProps & DefaultView['props'];
 
 export function useThemeColor(
@@ -31,10 +36,18 @@ export function useThemeColor(
 }
 
 export function Text(props: TextProps) {
-  const { style, lightColor, darkColor, ...otherProps } = props;
+  const { style, lightColor, darkColor, variant = 'sans', weight = 'regular', ...otherProps } = props;
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
-  return <DefaultText style={[{ color }, style]} {...otherProps} />;
+  const fontFamily = variant === 'serif'
+    ? (weight === 'bold' ? Typography.families.serifBold : Typography.families.serif)
+    : (weight === 'bold' ? Typography.families.sansBold : (weight === 'medium' ? Typography.families.sansMedium : Typography.families.sans));
+
+  return <DefaultText style={[{ color, fontFamily }, style]} {...otherProps} />;
+}
+
+export function SerifText(props: TextProps) {
+  return <Text {...props} variant="serif" />;
 }
 
 export function View(props: ViewProps) {
@@ -43,3 +56,48 @@ export function View(props: ViewProps) {
 
   return <DefaultView style={[{ backgroundColor }, style]} {...otherProps} />;
 }
+
+export function GlassView(props: ViewProps & { intensity?: number }) {
+  const { style, lightColor, darkColor, intensity = 40, ...otherProps } = props;
+  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'glass');
+  const borderColor = useThemeColor({ light: lightColor, dark: darkColor }, 'border');
+
+  return (
+    <BlurView
+      intensity={intensity}
+      style={[
+        {
+          backgroundColor,
+          borderColor,
+          borderWidth: 0.5,
+          borderRadius: 24,
+          overflow: 'hidden'
+        },
+        style
+      ]}
+      {...otherProps}
+    />
+  );
+}
+
+export function Card(props: ViewProps) {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const glow = useThemeColor({ light: lightColor, dark: darkColor }, 'glow');
+
+  return (
+    <GlassView
+      style={[
+        {
+          shadowColor: glow,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.5,
+          shadowRadius: 20,
+          elevation: 5,
+        },
+        style
+      ]}
+      {...otherProps}
+    />
+  );
+}
+

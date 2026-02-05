@@ -1,57 +1,73 @@
+import { Redirect, Tabs } from 'expo-router';
+import { Leaf, Repeat, Sparkles, Stars } from 'lucide-react-native';
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
 
-import Colors from '@/constants/Colors';
+import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
-}
+import Colors from '@/constants/Colors';
+import { useUser } from '@/context/UserContext';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() ?? 'dark';
+  const { state, isLoading } = useUser();
+
+  if (isLoading) {
+    return <View style={{ flex: 1 }} />;
+  }
+
+  if (!state.hasCompletedOnboarding) {
+    return <Redirect href="/welcome" />;
+  }
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        tabBarActiveTintColor: Colors[colorScheme].tint,
+        tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
+        tabBarStyle: {
+          borderTopColor: Colors[colorScheme].border,
+          backgroundColor: Colors[colorScheme].background,
+          paddingTop: 8,
+          height: 84,
+          paddingBottom: 32,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'Inter_500Medium',
+          fontSize: 9,
+          textTransform: 'lowercase',
+          letterSpacing: 1,
+        },
+        headerShown: false,
       }}>
       <Tabs.Screen
-        name="index"
+        name="today"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: 'ritual',
+          tabBarIcon: ({ color }) => <Sparkles size={20} color={color} />,
         }}
       />
+
       <Tabs.Screen
-        name="two"
+        name="community"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'garden',
+          tabBarIcon: ({ color }) => <Leaf size={20} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="week"
+        options={{
+          title: 'rhythm',
+          tabBarIcon: ({ color }) => <Repeat size={20} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="becoming"
+        options={{
+          title: 'becoming',
+          tabBarIcon: ({ color }) => <Stars size={20} color={color} />,
         }}
       />
     </Tabs>

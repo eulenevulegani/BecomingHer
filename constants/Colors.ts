@@ -1,19 +1,40 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+const palette = {
+  softPearl: '#F9F7F2',
+  deepEspresso: '#2D2926',
+  mutedClay: '#C7BBAF',
+  warmSand: '#E8E2D9',
+  sageGreen: '#707A66',
+  dustySlate: '#8C929D',
+  mist: 'rgba(249, 247, 242, 0.6)',
+  pureWhite: '#FFFFFF',
+  obsidian: '#121212',
+};
 
 export default {
   light: {
-    text: '#000',
-    background: '#fff',
-    tint: tintColorLight,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
+    text: palette.deepEspresso,
+    background: palette.softPearl,
+    tint: palette.sageGreen,
+    tabIconDefault: palette.dustySlate,
+    tabIconSelected: palette.sageGreen,
+    card: palette.pureWhite,
+    border: palette.mutedClay,
+    glass: 'rgba(249, 247, 242, 0.15)',
+    primary: palette.sageGreen,
+    secondary: palette.dustySlate,
+    glow: 'rgba(112, 122, 102, 0.15)',
   },
   dark: {
-    text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
+    text: palette.warmSand,
+    background: palette.obsidian,
+    tint: palette.sageGreen,
+    tabIconDefault: palette.dustySlate,
+    tabIconSelected: palette.sageGreen,
+    card: palette.deepEspresso,
+    border: '#2A2A2A',
+    glass: 'rgba(255, 255, 255, 0.08)',
+    primary: palette.sageGreen,
+    secondary: palette.dustySlate,
+    glow: 'rgba(112, 122, 102, 0.25)',
   },
 };
