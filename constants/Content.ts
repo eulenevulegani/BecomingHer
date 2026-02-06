@@ -14,39 +14,45 @@ export const BECOMING_PROMPTS = {
         "Listening when I wanted to fix..."
     ],
     proof_reflections: {
-        'becoming a woman who leads with vision': [
-            'i prioritized my long-term vision',
-            'i acted with the authority of a leader',
-            'i protected my focus from the trivial',
-            'i saw a strategic path where others saw noise'
-        ],
         'becoming a woman who honors her body': [
             'i felt the rhythm of my breath',
-            'i noticed where i was holding tension',
-            'i honored my need for a pause',
-            'i chose what felt like kindness to my skin'
+            'i moved with strength and ease',
+            'i prioritized rest over performance',
+            'i nourished myself with intention'
         ],
-        'becoming a woman who savors the world': [
-            'i noticed a detail of pure beauty',
-            'i savored a flavor or moment fully',
-            'i expanded my world through curiosity',
-            'i carried myself with worldly ease'
-        ],
-        'becoming a woman who grows her abundance': [
-            'i made a choice from a place of abundance',
+        'becoming a woman who masters her abundance': [
+            'i made a choice from a place of security',
             'i respected the flow of my resources',
-            'i noticed an opportunity for expansion',
-            'i felt the weight of my future security'
+            'i noticed an opportunity for growth',
+            'i felt the weight of my future freedom'
         ],
-        'becoming a woman who owns her presence': [
-            'i felt comfortable taking up space',
-            'i chose quality and refinement',
-            'i spoke with quiet, clear conviction',
-            'i held my own presence with pride'
+        'becoming a woman who nurtures her community': [
+            'i spoke with kindness and clarity',
+            'i held a boundary with grace',
+            'i felt the strength of belonging',
+            'i invested time in a soul-connection'
+        ],
+        'becoming a woman who leads with vision': [
+            'i prioritized my long-term mission',
+            'i acted with the authority of a leader',
+            'i protected my focus from the trivial',
+            'i saw a path where others saw noise'
+        ],
+        'becoming a woman who evolves daily': [
+            'i met a challenge with curiosity',
+            'i reflected on a lesson learned',
+            'i nurtured a new skill or thought',
+            'i felt the richness of my own growth'
+        ],
+        'becoming a woman who curates her space': [
+            'i brought order to my surroundings',
+            'i felt the calm of a clear environment',
+            'i refined a daily system or routine',
+            'i honored the beauty of my home'
         ],
         'becoming a woman of inner peace': [
             'i responded instead of reacting',
-            'i felt a deep, unmoved inner peace',
+            'i felt a deep, unmoved stillness',
             'i listened to my intuition\'s whisper',
             'i stayed centered through the chaos'
         ],
@@ -61,6 +67,7 @@ export const BECOMING_PROMPTS = {
 
 export interface IntentionItem {
     id: string;
+    pillar: string;
     intention: string;
     description: string;
     practices: string[];
@@ -69,40 +76,53 @@ export interface IntentionItem {
 
 export const INTENTIONS_MAP: IntentionItem[] = [
     {
-        id: 'visionary',
-        intention: 'becoming a woman who leads with vision',
-        description: 'Building a legacy through strategic impact and quiet command.',
-        practices: ['write 3 long-term vision goals', 'block 1 hour for deep work', 'send a note to a mentor'],
-    },
-    {
-        id: 'wellness',
+        id: 'health',
+        pillar: 'Health',
         intention: 'becoming a woman who honors her body',
-        description: 'Cultivating a deep connection with her physical self through gentle care.',
-        practices: ['10 minutes of somatic movement', 'take a 20-minute nature walk', 'drink 500ml of water now'],
+        description: 'Your energy, strength, sleep, and emotional wellbeing.',
+        practices: ['10 minutes of somatic movement', 'choose a nourishing meal', '8 hours of restorative sleep', 'practice a moment of stillness'],
     },
     {
-        id: 'connoisseur',
-        intention: 'becoming a woman who savors the world',
-        description: 'Savoring the world’s finest through adventure and curated awe.',
-        practices: ['book a flight or research a destination', 'learn 5 phrases in a new language', 'save $20 toward a "luxe" fund'],
+        id: 'finances',
+        pillar: 'Finances',
+        intention: 'becoming a woman who masters her abundance',
+        description: 'How you earn, manage, save, invest, and grow money.',
+        practices: ['check net worth with gratitude', 'review my budget for today', 'save or invest a small amount', 'read 10 mins of financial wisdom'],
     },
     {
-        id: 'wealth',
-        intention: 'becoming a woman who grows her abundance',
-        description: 'Mastering the flow of abundance with logic and long-term security.',
-        practices: ['check net worth with gratitude', 'read 10 pages of a wealth book', 'automate $10 to savings'],
+        id: 'relationships',
+        pillar: 'Relationships',
+        intention: 'becoming a woman who nurtures her community',
+        description: 'Family, friendships, romantic connections, and networks.',
+        practices: ['send a note of appreciation', 'practice active listening', 'set or honor a boundary', 'schedule quality time'],
     },
     {
-        id: 'icon',
-        intention: 'becoming a woman who owns her presence',
-        description: 'Exuding sophisticated confidence through style and presence.',
-        practices: ['plan a "main character" outfit', 'practice 2 minutes of posture', 'speak up in one meeting today'],
+        id: 'purpose',
+        pillar: 'Purpose',
+        intention: 'becoming a woman who leads with vision',
+        description: 'Your work, mission, goals, and the impact you make.',
+        practices: ['write 3 long-term vision goals', 'block 1 hour for deep work', 'take one step toward a mission', 'refine my professional presence'],
     },
     {
-        id: 'soul',
+        id: 'growth',
+        pillar: 'Personal Growth',
+        intention: 'becoming a woman who evolves daily',
+        description: 'How you evolve mentally, emotionally, and intellectually.',
+        practices: ['read 10 pages of a book', 'journal my evening reflection', 'learn one new small skill', 'practice self-awareness'],
+    },
+    {
+        id: 'environment',
+        pillar: 'Environment',
+        intention: 'becoming a woman who curates her space',
+        description: 'Your surroundings and daily systems—home and digital.',
+        practices: ['declutter one small area', 'refine a daily morning system', 'organize my digital workspace', 'add a touch of beauty to my home'],
+    },
+    {
+        id: 'spirituality',
+        pillar: 'Spirituality',
         intention: 'becoming a woman of inner peace',
-        description: 'Leading from a center of stillness and unshakable intuitive depth.',
-        practices: ['sit in silence for 5 minutes', 'journal 3 things I release', 'do a full-body scan'],
+        description: 'Your beliefs, values, gratitude, and connection.',
+        practices: ['sit in silence for 5 minutes', 'practice a prayer or meditation', 'record 3 specific gratitudes', 're-align with a core value'],
     }
 ];
 

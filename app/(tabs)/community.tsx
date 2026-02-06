@@ -75,7 +75,7 @@ const FloatingLeaf = ({ delay = 0, startPos = { x: 0, y: 0 } }) => {
     );
 };
 
-export default function CommunityScreen() {
+export default function GardenScreen() {
     const { state, setPremium } = useUser();
     const primaryColor = useThemeColor({}, 'primary');
     const backgroundColor = useThemeColor({}, 'background');

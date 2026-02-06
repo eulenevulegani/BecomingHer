@@ -70,6 +70,7 @@ function RootLayoutNav() {
           <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="proof-room" options={{ presentation: 'modal', headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </UserProvider>

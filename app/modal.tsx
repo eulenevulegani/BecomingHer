@@ -83,7 +83,8 @@ export default function WinRecordingModal() {
           <Button
             title="let it count"
             onPress={handleSaveWin}
-            variant="primary"
+            variant="glow"
+            color={primaryColor}
             disabled={winText.trim().length === 0}
             style={styles.saveButton}
           />
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 60,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     alignItems: 'flex-end',
     backgroundColor: 'transparent',
   },
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     paddingTop: 40,
     backgroundColor: 'transparent',
   },
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
     textTransform: 'lowercase',
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     color: '#FFF',
     marginBottom: 12,
   },

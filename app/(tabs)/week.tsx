@@ -4,9 +4,9 @@ import { PremiumModal } from '@/components/visuals/PremiumModal';
 import { useUser } from '@/context/UserContext';
 import { AIPersonality, AIService } from '@/lib/AIService';
 import { useRouter } from 'expo-router';
-import { Crown } from 'lucide-react-native';
+import { Crown, Share2 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, TouchableOpacity } from 'react-native';
+import { View as DefaultView, ScrollView, StatusBar, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function WeekScreen() {
@@ -39,8 +39,17 @@ export default function WeekScreen() {
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.header}>
-                    <Text style={styles.label}>your rhythm</Text>
-                    <SerifText weight="bold" style={styles.title}>The Weekly Flow</SerifText>
+                    <DefaultView style={styles.headerRow}>
+                        <DefaultView>
+                            <Text style={styles.label}>your rhythm</Text>
+                            <SerifText weight="bold" style={styles.title}>The Weekly Flow</SerifText>
+                        </DefaultView>
+                        {currentFocusCycle && (
+                            <TouchableOpacity style={styles.shareButton}>
+                                <Share2 size={16} color="#8E8E93" />
+                            </TouchableOpacity>
+                        )}
+                    </DefaultView>
                     <Text style={styles.subtitle}>“Growth is quiet, personal, and cumulative.”</Text>
                 </Animated.View>
 
@@ -56,9 +65,9 @@ export default function WeekScreen() {
                 )}
 
                 {state.isPremium ? (
-                    <View style={styles.section}>
+                    <DefaultView style={styles.section}>
                         <Text style={styles.sectionLabel}>ai companion voice</Text>
-                        <View style={styles.personalityGrid}>
+                        <DefaultView style={styles.personalityGrid}>
                             {(['wise-friend', 'muse', 'anchor', 'pioneer'] as AIPersonality[]).map((p) => (
                                 <TouchableOpacity
                                     key={p}
@@ -71,8 +80,8 @@ export default function WeekScreen() {
                                     <Text style={[styles.personalityText, state.activePersonality === p && { color: '#000' }]}>{p}</Text>
                                 </TouchableOpacity>
                             ))}
-                        </View>
-                    </View>
+                        </DefaultView>
+                    </DefaultView>
                 ) : (
                     <TouchableOpacity onPress={() => setIsPremiumModalVisible(true)} style={styles.premiumNudgeSection}>
                         <GlassView intensity={10} style={styles.premiumFlowCard}>
@@ -83,20 +92,20 @@ export default function WeekScreen() {
                 )}
 
                 {/* Active Focus */}
-                <View style={styles.section}>
+                <DefaultView style={styles.section}>
                     <Text style={styles.sectionLabel}>active weekly focus</Text>
                     {currentFocusCycle ? (
                         <GlassView intensity={15} style={styles.focusOverviewCard}>
                             <SerifText style={styles.focusIntention}>“{currentFocusCycle.intention}”</SerifText>
-                            <View style={styles.progressSection}>
+                            <DefaultView style={styles.progressSection}>
                                 <Text style={styles.progressLabel}>focus moves:</Text>
                                 {currentFocusCycle.practices.map((p, i) => (
-                                    <View key={i} style={styles.practiceRow}>
-                                        <View style={[styles.practiceDot, { backgroundColor: primaryColor }]} />
+                                    <DefaultView key={i} style={styles.practiceRow}>
+                                        <DefaultView style={[styles.practiceDot, { backgroundColor: primaryColor }]} />
                                         <Text style={styles.practiceText}>{p}</Text>
-                                    </View>
+                                    </DefaultView>
                                 ))}
-                            </View>
+                            </DefaultView>
                         </GlassView>
                     ) : (
                         <TouchableOpacity
@@ -106,22 +115,22 @@ export default function WeekScreen() {
                             <Text style={styles.emptyFocusText}>No active focus set for this week. Visit 'Becoming' to choose one.</Text>
                         </TouchableOpacity>
                     )}
-                </View>
+                </DefaultView>
 
                 {/* Identity Pattern */}
-                <View style={styles.section}>
+                <DefaultView style={styles.section}>
                     <Text style={styles.sectionLabel}>your becoming library</Text>
-                    <View style={styles.identityPatternGrid}>
+                    <DefaultView style={styles.identityPatternGrid}>
                         {activeIntentions.map((intention, i) => (
-                            <View key={i} style={styles.patternItem}>
+                            <DefaultView key={i} style={styles.patternItem}>
                                 <SerifText style={styles.patternText}>“{intention}”</SerifText>
-                            </View>
+                            </DefaultView>
                         ))}
                         {activeIntentions.length === 0 && (
                             <Text style={styles.emptyNote}>Choose who you're becoming to see your patterns here.</Text>
                         )}
-                    </View>
-                </View>
+                    </DefaultView>
+                </DefaultView>
 
                 <PremiumModal
                     isVisible={isPremiumModalVisible}
@@ -150,6 +159,16 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         backgroundColor: 'transparent',
     },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    shareButton: {
+        padding: 12,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+    },
     label: {
         fontSize: 10,
         color: '#8E8E93',
@@ -168,6 +187,7 @@ const styles = StyleSheet.create({
         color: '#D4CDC3',
         fontStyle: 'italic',
         opacity: 0.8,
+        marginTop: 8,
     },
     section: {
         marginBottom: 32,

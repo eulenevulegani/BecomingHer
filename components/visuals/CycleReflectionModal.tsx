@@ -1,11 +1,14 @@
 import { GlassView, SerifText, Text, useThemeColor, View } from '@/components/Themed';
 import { IDENTITY_SHIFT_FACTS } from '@/constants/Content';
 import { BlurView } from 'expo-blur';
-import { CheckCircle2, RefreshCw, Sparkles, Target } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import * as Sharing from 'expo-sharing';
+import { CheckCircle2, RefreshCw, Share, Sparkles, Target } from 'lucide-react-native'; // Added Share
+import React, { useMemo, useRef } from 'react'; // Added useRef
 import { Modal, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { captureRef } from 'react-native-view-shot'; // Import captureRef
 import { CelebrationEffect } from './CelebrationEffect';
+import { ShareCard } from './ShareCard'; // Import ShareCard
 
 interface CycleReflectionModalProps {
     isVisible: boolean;
@@ -28,10 +31,23 @@ export const CycleReflectionModal: React.FC<CycleReflectionModalProps> = ({
     currentIdentity
 }) => {
     const primaryColor = useThemeColor({}, 'primary');
+    const viewRef = useRef(null);
 
     const randomFact = useMemo(() => {
         return IDENTITY_SHIFT_FACTS[Math.floor(Math.random() * IDENTITY_SHIFT_FACTS.length)];
     }, [isVisible]);
+
+    const handleShare = async () => {
+        try {
+            const uri = await captureRef(viewRef, {
+                format: 'png',
+                quality: 0.9,
+            });
+            await Sharing.shareAsync(uri);
+        } catch (error) {
+            console.error('Sharing failed', error);
+        }
+    };
 
     return (
         <Modal visible={isVisible} transparent animationType="fade" onRequestClose={onClose}>
@@ -70,6 +86,14 @@ export const CycleReflectionModal: React.FC<CycleReflectionModalProps> = ({
 
                         <View style={styles.actions}>
                             <TouchableOpacity
+                                onPress={handleShare}
+                                style={[styles.secondaryButton, { marginBottom: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20 }]}
+                            >
+                                <Share size={16} color={primaryColor} />
+                                <Text style={[styles.secondaryButtonText, { color: primaryColor }]}>Share Weekly Recap</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
                                 onPress={onContinue}
                                 style={[styles.primaryButton, { backgroundColor: primaryColor }]}
                             >
@@ -86,6 +110,20 @@ export const CycleReflectionModal: React.FC<CycleReflectionModalProps> = ({
                         </View>
                     </GlassView>
                 </Animated.View>
+            </View>
+
+            {/* Hidden capture view */}
+            <View style={{ position: 'absolute', left: -10000, top: 0 }}>
+                <View ref={viewRef} collapsable={false}>
+                    <ShareCard
+                        cycle={{
+                            intention: currentIdentity,
+                            practices: [],
+                            weekStartDate: new Date().toISOString()
+                        }}
+                        stats={{ ...stats, vitality: 0 }}
+                    />
+                </View>
             </View>
 
             <CelebrationEffect

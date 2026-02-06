@@ -1,75 +1,84 @@
 export const COPY = {
     manifesto: {
-        title: "Becoming Her",
-        tagline: "A private space to become who you already feel yourself growing into.",
+        title: "Her Universe",
+        tagline: "You are the center of your own universe. Expand it, one star at a time.",
         philosophies: [
-            "Becoming Her is not about doing more.",
-            "It’s about doing what aligns.",
-            "Growth is quiet, personal, and cumulative.",
-            "Proof matters — not to impress, but to remember."
+            "Your universe expands with every intention.",
+            "Each small action is a star you collect.",
+            "Growth is infinite, personal, and luminous.",
+            "Stars matter — not to impress, but to illuminate your path."
         ],
-        rules: "No pressure. No performance. Just intention, movement, and proof — over time."
+        rules: "No pressure. No performance. Just small steps, gentle movements, and collected stars — over time."
     },
     onboarding: {
         welcome: {
-            title: "the private club for your evolution.",
-            subtitle: "curated for the woman who wants it all.",
+            title: "welcome to your universe.",
+            subtitle: "curated for the woman who contains multitudes.",
             cta: "enter"
         },
         philosophy: {
-            title: "you don’t need to do everything.",
-            subtitle: "you just need to do what aligns.",
-            cta: "i’m ready"
+            title: "you don't need to conquer galaxies.",
+            subtitle: "you just need to flow toward what feels right.",
+            cta: "i'm ready"
         },
         intention: {
-            title: "who are you becoming this season?",
-            helper: "this can change. you’re allowed to evolve.",
+            title: "which world calls to you?",
+            helper: "your path can shift. you're allowed to explore.",
             cta: "next"
         },
         firstWeek: {
-            title: "let’s choose one week to begin.",
-            themePrompt: "choose who you're becoming",
+            title: "let's begin your first week.",
+            themePrompt: "choose your world",
             movePrompt: "add 1 small move",
-            cta: "start becoming"
+            cta: "launch"
         },
         premium: {
-            free: "remain in the garden",
-            paid: "elevate your becoming",
+            free: "explore your constellation",
+            paid: "expand your universe",
             price: "$49.99 / year"
         }
     },
     home: {
-        greeting: "Today doesn’t need much. Just honesty.",
+        greeting: "Your universe awaits. What star will you collect today?",
         sections: {
-            today: "today's intention",
-            move: "small moves (practice)",
-            proof: "your evidence of becoming"
+            today: "your world today",
+            move: "your moves for today",
+            proof: "stars in your sky"
         },
-        emptyProof: "proof often looks quieter than we expect.",
-        affirmationPrompt: "take a breath before you begin."
+        emptyProof: "even the quietest nights have hidden stars.",
+        affirmationPrompt: "breathe. you're exactly where you need to be."
     },
     becoming: {
-        title: "becoming",
-        header: "this is who you’re becoming.",
-        empty: "growth is happening, even when it's silent."
+        title: "your universe",
+        header: "you are the center of your universe.",
+        empty: "your galaxy is forming, even in the silence.",
+        pillars: {
+            health: "The world of vitality and radiant energy.",
+            finances: "The world of abundance and golden flow.",
+            relationships: "The world of connection and magnetic bonds.",
+            purpose: "The world of vision and bold direction.",
+            growth: "The world of expansion and infinite learning.",
+            environment: "The world of harmony and intentional space.",
+            spirituality: "The world of stillness and cosmic peace."
+        }
     },
     reflection: {
-        title: "reflection",
+        title: "cosmic reflection",
         prompts: [
-            "what did you show up for?",
-            "what felt heavy?",
-            "what carried you forward?"
+            "what world did you explore today?",
+            "what felt like gravity pulling you down?",
+            "what light carried you forward?"
         ],
-        cta: "close the week"
+        cta: "close today"
     },
     moves: {
-        label: "small moves",
-        success: "you kept a promise to yourself.",
-        missed: "you didn’t fail. you paused.",
-        returning: "welcome back. we saved your place."
+        label: "today's moves",
+        success: "a new star in your sky. ✨",
+        missed: "you didn't fall. you drifted. tomorrow is new.",
+        returning: "welcome back. your universe saved your place."
     },
     week_setup: {
-        title: "reset your rhythm for the next 7 days.",
-        subtitle: "this is your active frequency."
+        title: "set your focus for the next 7 days.",
+        subtitle: "this is your gravitational pull."
     }
 };

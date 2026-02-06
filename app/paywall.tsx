@@ -42,7 +42,7 @@ export default function PaywallScreen() {
                 <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.hero}>
                     <View style={[styles.heroGlow, { backgroundColor: primaryColor }]} />
                     <SerifText weight="bold" style={styles.title}>elevate your becoming.</SerifText>
-                    <Text style={styles.subtitle}>PROOFA PREMIUM ENROLLMENT</Text>
+                    <Text style={styles.subtitle}>HER UNIVERSE PREMIUM ENROLLMENT</Text>
                 </Animated.View>
 
                 <View style={styles.featureGrid}>
@@ -72,10 +72,11 @@ export default function PaywallScreen() {
 
                 <Animated.View entering={FadeIn.delay(1000)} style={styles.footer}>
                     <Button
+                        variant="glow"
                         title="begin elevation"
                         onPress={handleSubscribe}
                         size="lg"
-                        variant="primary"
+                        color={primaryColor}
                         style={styles.subscribeButton}
                     />
                     <Text style={styles.terms}>by subscribing, you agree to our terms of identity.</Text>

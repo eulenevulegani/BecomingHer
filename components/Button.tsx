@@ -7,13 +7,14 @@ import { Text, useThemeColor } from './Themed';
 interface ButtonProps {
     onPress: () => void;
     title: string;
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glow';
     size?: 'sm' | 'md' | 'lg';
     loading?: boolean;
     disabled?: boolean;
     style?: ViewStyle;
     textStyle?: TextStyle;
     haptic?: Haptics.ImpactFeedbackStyle;
+    color?: string;
 }
 
 export function Button({
@@ -26,8 +27,9 @@ export function Button({
     style,
     textStyle,
     haptic = Haptics.ImpactFeedbackStyle.Medium,
+    color,
 }: ButtonProps) {
-    const primaryColor = useThemeColor({}, 'primary');
+    const primaryColor = color || useThemeColor({}, 'primary');
     const secondaryColor = useThemeColor({}, 'secondary');
     const textColor = useThemeColor({}, 'text');
 
@@ -44,10 +46,19 @@ export function Button({
                 return {
                     backgroundColor: primaryColor,
                     shadowColor: primaryColor,
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 15,
-                    elevation: 8,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 10,
+                    elevation: 4,
+                };
+            case 'glow':
+                return {
+                    backgroundColor: primaryColor,
+                    shadowColor: primaryColor,
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.8,
+                    shadowRadius: 20,
+                    elevation: 10,
                 };
             case 'secondary':
                 return { backgroundColor: secondaryColor };
@@ -63,6 +74,7 @@ export function Button({
     const getTextStyle = () => {
         switch (variant) {
             case 'primary':
+            case 'glow':
                 return { color: '#000' };
             case 'secondary':
                 return { color: '#FFFFFF' };
@@ -96,7 +108,7 @@ export function Button({
             activeOpacity={0.9}
         >
             {loading ? (
-                <ActivityIndicator color={variant === 'primary' ? '#000' : primaryColor} />
+                <ActivityIndicator color={(variant === 'primary' || variant === 'glow') ? '#000' : primaryColor} />
             ) : (
                 <Text
                     weight="bold"
@@ -107,7 +119,7 @@ export function Button({
                         textStyle,
                     ]}
                 >
-                    {title.toUpperCase()}
+                    {title}
                 </Text>
             )}
         </TouchableOpacity>

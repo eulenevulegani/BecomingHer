@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from 'expo-router';
-import { Leaf, Repeat, Sparkles, Stars } from 'lucide-react-native';
+import { Compass, Moon, Sparkles } from 'lucide-react-native';
 import React from 'react';
 
 import { View } from '@/components/Themed';
@@ -12,7 +12,7 @@ export default function TabLayout() {
   const { state, isLoading } = useUser();
 
   if (isLoading) {
-    return <View style={{ flex: 1 }} />;
+    return <View style={{ flex: 1, backgroundColor: Colors.cosmic.deepSpace }} />;
   }
 
   if (!state.hasCompletedOnboarding) {
@@ -22,52 +22,58 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
+        tabBarActiveTintColor: Colors[colorScheme].primary,
         tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
         tabBarStyle: {
-          borderTopColor: Colors[colorScheme].border,
-          backgroundColor: Colors[colorScheme].background,
-          paddingTop: 8,
+          borderTopColor: 'rgba(255,255,255,0.05)',
+          backgroundColor: Colors.cosmic.deepSpace,
+          paddingTop: 12,
           height: 84,
-          paddingBottom: 32,
+          paddingBottom: 28,
         },
         tabBarLabelStyle: {
           fontFamily: 'Inter_500Medium',
           fontSize: 9,
           textTransform: 'lowercase',
-          letterSpacing: 1,
+          letterSpacing: 2,
         },
         headerShown: false,
       }}>
       <Tabs.Screen
         name="today"
         options={{
-          title: 'ritual',
+          title: 'today',
           tabBarIcon: ({ color }) => <Sparkles size={20} color={color} />,
         }}
       />
 
       <Tabs.Screen
-        name="community"
+        name="journey"
         options={{
-          title: 'garden',
-          tabBarIcon: ({ color }) => <Leaf size={20} color={color} />,
-        }}
-      />
-
-      <Tabs.Screen
-        name="week"
-        options={{
-          title: 'rhythm',
-          tabBarIcon: ({ color }) => <Repeat size={20} color={color} />,
+          title: 'stars',
+          tabBarIcon: ({ color }) => <Compass size={20} color={color} />,
         }}
       />
 
       <Tabs.Screen
         name="becoming"
         options={{
-          title: 'becoming',
-          tabBarIcon: ({ color }) => <Stars size={20} color={color} />,
+          title: 'universe',
+          tabBarIcon: ({ color }) => <Moon size={20} color={color} />,
+        }}
+      />
+
+      {/* Hidden tabs - keep files but hide from nav */}
+      <Tabs.Screen
+        name="week"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

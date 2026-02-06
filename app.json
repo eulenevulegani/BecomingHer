@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "proofa",
-    "slug": "proofa",
+    "name": "Her Universe",
+    "slug": "her-universe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "proofa",
+    "scheme": "her-universe",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {

@@ -1,94 +1,115 @@
-import { GlassView, SerifText, Text, useThemeColor, View } from '@/components/Themed';
-import { AuraBackground } from '@/components/visuals/AuraBackground';
+import { Button } from '@/components/Button';
+import { GlassView, SerifText, Text, View } from '@/components/Themed';
+import { CosmicBackground } from '@/components/visuals/CosmicBackground';
+import { FloatingPlanet, PLANET_POSITIONS } from '@/components/visuals/FloatingPlanet';
+import Colors from '@/constants/Colors';
 import { INTENTIONS_MAP } from '@/constants/Content';
 import { useUser } from '@/context/UserContext';
+import { COPY } from '@/lib/copy';
 import { useRouter } from 'expo-router';
-import { ArrowRight, Check } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Dimensions, ScrollView, StatusBar, StyleSheet, TouchableOpacity } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { Dimensions, StatusBar, StyleSheet } from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 
-const { width } = Dimensions.get('window');
-
-const STARTER_IDENTITIES = INTENTIONS_MAP.slice(0, 6);
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
     const { updateState } = useUser();
     const router = useRouter();
-    const primaryColor = useThemeColor({}, 'primary');
     const [selectedIntention, setSelectedIntention] = useState<string | null>(null);
 
-    const handleBegin = () => {
+    const handleSelect = (intention: string) => {
+        // If tapping the same planet again, navigate directly
+        if (selectedIntention === intention) {
+            handleLaunch();
+            return;
+        }
+        setSelectedIntention(intention);
+    };
+
+    const handleLaunch = async () => {
         if (!selectedIntention) return;
 
         updateState({
-            activeIntentions: [selectedIntention],
             hasCompletedOnboarding: true,
-            // Set initial focus cycle to the selected intention
+            activeIntentions: [selectedIntention],
             currentFocusCycle: {
                 intention: selectedIntention,
                 practices: INTENTIONS_MAP.find(i => i.intention === selectedIntention)?.practices || [],
                 weekStartDate: new Date().toISOString()
             }
         });
-
         router.replace('/(tabs)/today');
     };
+
+    const selectedData = INTENTIONS_MAP.find(i => i.intention === selectedIntention);
 
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
-            <AuraBackground />
+            <CosmicBackground />
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.header}>
-                    <Text style={styles.label}>becoming her</Text>
-                    <SerifText weight="bold" style={styles.title}>Your ritual of self-creation.</SerifText>
-                    <Text style={styles.subtitle}>Choose the identity that calls to you most today. We’ll build the rhythm for your most ambitious season.</Text>
+            {/* Title Section */}
+            <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.header}>
+                <Text style={styles.label}>her universe</Text>
+                <SerifText weight="bold" style={styles.title}>
+                    {COPY.onboarding.intention.title}
+                </SerifText>
+                <Text style={styles.subtitle}>{COPY.onboarding.intention.helper}</Text>
+            </Animated.View>
+
+            {/* Floating Planets Universe */}
+            <Animated.View entering={FadeIn.delay(500)} style={styles.universeContainer}>
+                {INTENTIONS_MAP.map((item, index) => (
+                    <FloatingPlanet
+                        key={item.id}
+                        pillar={item.pillar}
+                        intention={item.intention}
+                        isSelected={selectedIntention === item.intention}
+                        onPress={() => handleSelect(item.intention)}
+                        position={PLANET_POSITIONS[index % PLANET_POSITIONS.length]}
+                        size={55 + (index % 3) * 8}
+                        floatDelay={index * 200}
+                    />
+                ))}
+            </Animated.View>
+
+            {/* Selected Identity Display */}
+            {selectedIntention && (
+                <Animated.View entering={FadeInUp.delay(100).springify()} style={styles.selectionPanelContainer}>
+                    <GlassView intensity={20} style={styles.selectionPanel}>
+                        <Text style={styles.selectedLabel}>your identity</Text>
+                        <SerifText style={styles.selectedIntention}>
+                            "{selectedIntention}"
+                        </SerifText>
+                        {selectedData && (
+                            <Text style={styles.selectedDescription} numberOfLines={2}>
+                                {selectedData.description}
+                            </Text>
+                        )}
+                    </GlassView>
                 </Animated.View>
+            )}
 
-                <Animated.View entering={FadeInUp.delay(600).springify()} style={styles.grid}>
-                    {STARTER_IDENTITIES.map((item, index) => {
-                        const isSelected = selectedIntention === item.intention;
-
-                        return (
-                            <TouchableOpacity
-                                key={item.id}
-                                onPress={() => setSelectedIntention(item.intention)}
-                                activeOpacity={0.8}
-                                style={styles.cardWrapper}
-                            >
-                                <GlassView
-                                    intensity={isSelected ? 30 : 15}
-                                    style={[styles.card, isSelected && { borderColor: primaryColor }]}
-                                >
-                                    {isSelected && (
-                                        <View style={[styles.checkBadge, { backgroundColor: primaryColor }]}>
-                                            <Check size={12} color="#000" />
-                                        </View>
-                                    )}
-                                    <SerifText style={[styles.cardTitle, isSelected && { color: primaryColor }]}>
-                                        {item.intention}
-                                    </SerifText>
-                                    {/* Description removed for cleaner look */}
-                                </GlassView>
-                            </TouchableOpacity>
-                        );
-                    })}
+            {/* Launch Button */}
+            {selectedIntention && (
+                <Animated.View entering={FadeInUp.delay(200).springify()} style={styles.footer}>
+                    <Button
+                        variant="glow"
+                        title="begin my journey"
+                        onPress={handleLaunch}
+                        color={Colors.cosmic.stardustGold}
+                        size="lg"
+                    />
                 </Animated.View>
+            )}
 
-                {selectedIntention && (
-                    <Animated.View entering={FadeInUp} style={styles.footer}>
-                        <TouchableOpacity
-                            onPress={handleBegin}
-                            style={[styles.button, { backgroundColor: primaryColor }]}
-                        >
-                            <Text style={styles.buttonText}>Begin My Journey</Text>
-                            <ArrowRight size={18} color="#000" />
-                        </TouchableOpacity>
-                    </Animated.View>
-                )}
-            </ScrollView>
+            {/* Subtle hint when nothing selected */}
+            {!selectedIntention && (
+                <Animated.View entering={FadeIn.delay(1500)} style={styles.hintContainer}>
+                    <Text style={styles.hintText}>tap a world to begin</Text>
+                </Animated.View>
+            )}
         </View>
     );
 }
@@ -96,106 +117,90 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
-    },
-    scrollContent: {
-        paddingTop: 100,
-        paddingHorizontal: 32,
-        paddingBottom: 120,
+        backgroundColor: Colors.cosmic.deepSpace,
     },
     header: {
-        marginBottom: 48,
-        alignItems: 'center',
-    },
-    label: {
-        fontSize: 12,
-        color: '#8E8E93',
-        letterSpacing: 3,
-        marginBottom: 16,
-        textTransform: 'uppercase',
-    },
-    title: {
-        fontSize: 36,
-        color: '#FFF',
-        textAlign: 'center',
-        lineHeight: 44,
-        marginBottom: 16,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#D4CDC3',
-        textAlign: 'center',
-        lineHeight: 24,
-        opacity: 0.8,
-        paddingHorizontal: 20,
-    },
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 16,
-        justifyContent: 'space-between',
-    },
-    cardWrapper: {
-        width: (width - 64 - 16) / 2,
-        marginBottom: 16,
-    },
-    card: {
-        padding: 20,
-        borderRadius: 24,
-        paddingBottom: 20,
-        borderColor: 'rgba(255,255,255,0.05)',
-        minHeight: 100, // Reduced height
-        justifyContent: 'center', // Center title
-    },
-    checkBadge: {
-        position: 'absolute',
-        top: -8,
-        right: -8,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        justifyContent: 'center',
+        paddingTop: 70,
+        paddingHorizontal: 32,
         alignItems: 'center',
         zIndex: 10,
     },
-    cardTitle: {
-        fontSize: 18,
-        color: '#FFF',
-        lineHeight: 24,
-    },
-    practicesPreview: {
-        marginTop: 12,
-        gap: 6,
-    },
-    practiceTag: {
+    label: {
         fontSize: 10,
-        color: '#8E8E93',
+        color: Colors.cosmic.stardustGold,
+        letterSpacing: 4,
+        marginBottom: 12,
         textTransform: 'lowercase',
     },
-    footer: {
-        position: 'absolute',
-        bottom: 40,
-        left: 32,
-        right: 32,
+    title: {
+        fontSize: 26,
+        color: '#FFF',
+        textAlign: 'center',
+        marginBottom: 8,
     },
-    button: {
-        backgroundColor: '#FFF',
-        flexDirection: 'row',
-        paddingVertical: 14, // Reduced vertical padding
-        paddingHorizontal: 28, // Reduced horizontal padding
-        borderRadius: 24, // More rounded for smaller look
+    subtitle: {
+        fontSize: 13,
+        color: '#8E8E93',
+        textAlign: 'center',
+        lineHeight: 20,
+    },
+
+    // Universe Container
+    universeContainer: {
+        flex: 1,
+        marginTop: 20,
+        marginHorizontal: 10,
+        position: 'relative',
+        minHeight: SCREEN_HEIGHT * 0.45,
+    },
+
+    // Selection Panel
+    selectionPanelContainer: {
+        marginHorizontal: 24,
+    },
+    selectionPanel: {
+        paddingVertical: 24,
+        paddingHorizontal: 28,
         alignItems: 'center',
-        justifyContent: 'center', // Added to center content
-        gap: 8,
-        shadowColor: '#FFF',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
-        elevation: 5,
     },
-    buttonText: {
-        color: '#000',
-        fontSize: 15, // Slightly smaller font
-        fontWeight: 'bold',
-    }
+    selectedLabel: {
+        fontSize: 9,
+        color: Colors.cosmic.stardustGold,
+        letterSpacing: 2,
+        marginBottom: 8,
+        textTransform: 'uppercase',
+    },
+    selectedIntention: {
+        fontSize: 17,
+        color: '#FFF',
+        textAlign: 'center',
+        lineHeight: 24,
+        marginBottom: 6,
+    },
+    selectedDescription: {
+        fontSize: 12,
+        color: '#8E8E93',
+        textAlign: 'center',
+        lineHeight: 18,
+    },
+
+    // Footer
+    footer: {
+        padding: 24,
+        paddingBottom: 50,
+    },
+
+    // Hint
+    hintContainer: {
+        position: 'absolute',
+        bottom: 80,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+    },
+    hintText: {
+        fontSize: 12,
+        color: '#6E6E73',
+        letterSpacing: 1,
+    },
 });
