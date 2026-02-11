@@ -55,10 +55,10 @@ export function Button({
                 return {
                     backgroundColor: primaryColor,
                     shadowColor: primaryColor,
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.8,
-                    shadowRadius: 20,
-                    elevation: 10,
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 15,
+                    elevation: 8,
                 };
             case 'secondary':
                 return { backgroundColor: secondaryColor };

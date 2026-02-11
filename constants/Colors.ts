@@ -1,66 +1,72 @@
-// Her Universe - Cosmic Color Palette
-const cosmic = {
-  // Core space colors
-  deepSpace: '#0A0A0F',
-  nebulaPurple: '#2D1B4E',
-  stardustGold: '#FFD700',
-  cosmicWhite: '#F5F0FF',
-  voidBlack: '#050508',
+// Her Brand - Simple & Elegant Palette
+const brand = {
+  // Core colors
+  background: '#050508', // Deepest Space
+  deep: '#030305',
+  primary: '#E6C15C',    // Refined Stardust Gold (less "yellow", more metallic)
+  secondary: '#6347D1',  // Vibrant Nebula Purple
+  accent: '#4ECDC4',     // Cosmic Teal
+  white: '#F5F0FF',
 
-  // Planet colors (mapped to pillars)
-  planetHealth: '#4ECDC4',      // Earth-like teal
-  planetFinances: '#FFD700',    // Jupiter gold
-  planetRelationships: '#FF6B9D', // Venus pink
-  planetPurpose: '#FF6347',     // Mars red
-  planetGrowth: '#9B59B6',      // Saturn purple
-  planetEnvironment: '#3498DB', // Neptune blue
-  planetSpirituality: '#E8E4F0', // Moon silver
+  // Identity colors - Refined for "Premium" feel
+  identityHealth: '#4ECDC4',
+  identityFinances: '#E6C15C',
+  identityRelationships: '#FF6B9D',
+  identityPurpose: '#FF7F50',
+  identityGrowth: '#9B59B6',
+  identityEnvironment: '#3498DB',
+  identitySpirituality: '#DCD0FF',
 
-  // Gradients & effects
-  nebulaGlow: 'rgba(45, 27, 78, 0.6)',
-  starGlow: 'rgba(255, 215, 0, 0.3)',
+  // Effects
+  glow: 'rgba(99, 71, 209, 0.4)',
+  highlight: 'rgba(230, 193, 92, 0.2)',
 
-  // Text colors
-  starlightText: '#E8E2D9',
-  dimStar: '#8C929D',
+  // Text
+  textMain: '#F2F2F7',
+  textMuted: '#8E8E93',
+  textDim: 'rgba(242, 242, 247, 0.5)',
 };
 
-export const PLANET_COLORS = {
-  health: cosmic.planetHealth,
-  finances: cosmic.planetFinances,
-  relationships: cosmic.planetRelationships,
-  purpose: cosmic.planetPurpose,
-  growth: cosmic.planetGrowth,
-  environment: cosmic.planetEnvironment,
-  spirituality: cosmic.planetSpirituality,
+export const IDENTITY_COLORS = {
+  health: brand.identityHealth,
+  finances: brand.identityFinances,
+  relationships: brand.identityRelationships,
+  purpose: brand.identityPurpose,
+  growth: brand.identityGrowth,
+  environment: brand.identityEnvironment,
+  spirituality: brand.identitySpirituality,
 };
+
+export const PILLAR_COLORS = IDENTITY_COLORS; // Backward compatibility
+
+
 
 export default {
   light: {
     text: '#2D2926',
-    background: cosmic.cosmicWhite,
-    tint: cosmic.nebulaPurple,
-    tabIconDefault: cosmic.dimStar,
-    tabIconSelected: cosmic.nebulaPurple,
+    background: brand.white,
+    tint: brand.secondary,
+    tabIconDefault: brand.textMuted,
+    tabIconSelected: brand.secondary,
     card: '#FFFFFF',
     border: '#C7BBAF',
     glass: 'rgba(249, 247, 242, 0.15)',
-    primary: cosmic.stardustGold,
-    secondary: cosmic.nebulaPurple,
-    glow: cosmic.starGlow,
+    primary: brand.primary,
+    secondary: brand.secondary,
+    glow: brand.highlight,
   },
   dark: {
-    text: cosmic.starlightText,
-    background: cosmic.deepSpace,
-    tint: cosmic.stardustGold,
-    tabIconDefault: cosmic.dimStar,
-    tabIconSelected: cosmic.stardustGold,
+    text: brand.textMain,
+    background: brand.background,
+    tint: brand.primary,
+    tabIconDefault: brand.textMuted,
+    tabIconSelected: brand.primary,
     card: '#1A1A2E',
     border: '#2A2A3E',
-    glass: 'rgba(255, 255, 255, 0.08)',
-    primary: cosmic.stardustGold,
-    secondary: cosmic.nebulaPurple,
-    glow: cosmic.starGlow,
+    glass: 'rgba(5, 5, 10, 0.5)',
+    primary: brand.primary,
+    secondary: brand.secondary,
+    glow: brand.highlight,
   },
-  cosmic, // Export cosmic palette for direct use
+  brand,
 };

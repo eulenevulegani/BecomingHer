@@ -1,4 +1,4 @@
-import Colors, { PLANET_COLORS } from '@/constants/Colors';
+import Colors, { PILLAR_COLORS } from '@/constants/Colors';
 import React, { useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SerifText, Text } from '../Themed';
 
-interface PlanetProps {
+interface PillarVisualProps {
     pillar: string;
     name: string;
     isSelected: boolean;
@@ -20,30 +20,30 @@ interface PlanetProps {
     size?: number;
 }
 
-const PILLAR_PLANET_MAP: Record<string, { color: string; hasRings?: boolean; hasMoons?: number }> = {
-    health: { color: PLANET_COLORS.health },
-    finances: { color: PLANET_COLORS.finances },
-    relationships: { color: PLANET_COLORS.relationships, hasMoons: 1 },
-    purpose: { color: PLANET_COLORS.purpose },
-    growth: { color: PLANET_COLORS.growth, hasRings: true },
-    environment: { color: PLANET_COLORS.environment },
-    spirituality: { color: PLANET_COLORS.spirituality, hasMoons: 2 },
+const PILLAR_VISUALS_MAP: Record<string, { color: string; hasRings?: boolean; hasMoons?: number }> = {
+    health: { color: PILLAR_COLORS.health },
+    finances: { color: PILLAR_COLORS.finances },
+    relationships: { color: PILLAR_COLORS.relationships, hasMoons: 1 },
+    purpose: { color: PILLAR_COLORS.purpose },
+    growth: { color: PILLAR_COLORS.growth, hasRings: true },
+    environment: { color: PILLAR_COLORS.environment },
+    spirituality: { color: PILLAR_COLORS.spirituality, hasMoons: 2 },
 };
 
-export function Planet({ pillar, name, isSelected, onPress, size = 80 }: PlanetProps) {
-    const planetConfig = PILLAR_PLANET_MAP[pillar.toLowerCase()] || { color: Colors.cosmic.stardustGold };
-    const orbit = useSharedValue(0);
+export function PillarVisual({ pillar, name, isSelected, onPress, size = 80 }: PillarVisualProps) {
+    const pillarConfig = PILLAR_VISUALS_MAP[pillar.toLowerCase()] || { color: Colors.brand.primary };
+    const rotation = useSharedValue(0);
     const pulse = useSharedValue(0);
     const scale = useSharedValue(1);
 
     useEffect(() => {
-        // Slow orbit rotation for moons
-        orbit.value = withRepeat(
+        // Slow rotation for moons
+        rotation.value = withRepeat(
             withTiming(1, { duration: 8000, easing: Easing.linear }),
             -1,
             false
         );
-        // Gentle pulse for selected planet
+        // Gentle pulse for selected pillar
         pulse.value = withRepeat(
             withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
             -1,
@@ -55,7 +55,7 @@ export function Planet({ pillar, name, isSelected, onPress, size = 80 }: PlanetP
         scale.value = withSpring(isSelected ? 1.15 : 1, { damping: 15 });
     }, [isSelected]);
 
-    const planetStyle = useAnimatedStyle(() => ({
+    const pillarStyle = useAnimatedStyle(() => ({
         transform: [
             { scale: scale.value },
         ],
@@ -68,13 +68,13 @@ export function Planet({ pillar, name, isSelected, onPress, size = 80 }: PlanetP
 
     const moonStyle = useAnimatedStyle(() => ({
         transform: [
-            { rotate: `${interpolate(orbit.value, [0, 1], [0, 360])}deg` },
+            { rotate: `${interpolate(rotation.value, [0, 1], [0, 360])}deg` },
         ],
     }));
 
     return (
         <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-            <Animated.View style={[styles.container, { width: size * 1.5, height: size * 1.5 }, planetStyle]}>
+            <Animated.View style={[styles.container, { width: size * 1.5, height: size * 1.5 }, pillarStyle]}>
                 {/* Glow effect when selected */}
                 <Animated.View
                     style={[
@@ -121,9 +121,9 @@ export function Planet({ pillar, name, isSelected, onPress, size = 80 }: PlanetP
                     />
                 )}
 
-                {/* Orbiting moons */}
+                {/* Rotating moons */}
                 {planetConfig.hasMoons && (
-                    <Animated.View style={[styles.moonOrbit, { width: size * 1.3, height: size * 1.3 }, moonStyle]}>
+                    <Animated.View style={[styles.moonRotation, { width: size * 1.3, height: size * 1.3 }, moonStyle]}>
                         <View
                             style={[
                                 styles.moon,
@@ -133,9 +133,9 @@ export function Planet({ pillar, name, isSelected, onPress, size = 80 }: PlanetP
                     </Animated.View>
                 )}
 
-                {/* Planet name label */}
+                {/* Pillar name label */}
                 <View style={styles.labelContainer}>
-                    <Text style={[styles.pillarLabel, isSelected && { color: planetConfig.color }]}>
+                    <Text style={[styles.pillarLabel, isSelected && { color: pillarConfig.color }]}>
                         {pillar}
                     </Text>
                     <SerifText
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     glow: {
         position: 'absolute',
     },
-    planet: {
+    pillarVisual: {
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#FFF',
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
         transform: [{ rotateX: '70deg' }],
     },
-    moonOrbit: {
+    moonRotation: {
         position: 'absolute',
         justifyContent: 'flex-start',
         alignItems: 'center',

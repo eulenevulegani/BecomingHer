@@ -10,15 +10,15 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
-const ORB_SIZE = Math.min(width * 0.65, 380);
+const PILLAR_SIZE = Math.min(width * 0.65, 380);
 
-interface ActiveOrbProps {
+interface ActivePillarProps {
     title: string;
     onPress: () => void;
     momentum: string;
 }
 
-export function ActiveOrb({ title, onPress, momentum }: ActiveOrbProps) {
+export function ActivePillar({ title, onPress, momentum }: ActivePillarProps) {
     const primaryColor = useThemeColor({}, 'primary');
 
     const scale = useSharedValue(1);

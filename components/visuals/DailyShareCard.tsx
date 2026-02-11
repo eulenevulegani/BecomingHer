@@ -9,11 +9,11 @@ import { StyleSheet, View } from 'react-native';
 interface DailyShareCardProps {
     identity: string;
     moves: DailyMove[];
-    proofText?: string;
+    winText?: string;
     showWatermark?: boolean; // true for freemium, false for premium
 }
 
-export function DailyShareCard({ identity, moves, proofText, showWatermark = true }: DailyShareCardProps) {
+export function DailyShareCard({ identity, moves, winText, showWatermark = true }: DailyShareCardProps) {
     const primaryColor = useThemeColor({}, 'primary');
 
     const formattedDate = new Date().toLocaleDateString('en-US', {
@@ -88,12 +88,12 @@ export function DailyShareCard({ identity, moves, proofText, showWatermark = tru
                         <Text style={styles.statLabel}>showing up</Text>
                     </View>
 
-                    {/* Proof snippet */}
-                    {proofText && (
-                        <View style={styles.proofSection}>
-                            <Text style={styles.proofLabel}>proof</Text>
-                            <Text style={styles.proofText} numberOfLines={2}>
-                                "{proofText}"
+                    {/* Win snippet */}
+                    {winText && (
+                        <View style={styles.winSection}>
+                            <Text style={styles.winLabel}>my win</Text>
+                            <Text style={styles.winText} numberOfLines={2}>
+                                "{winText}"
                             </Text>
                         </View>
                     )}
@@ -203,20 +203,20 @@ const styles = StyleSheet.create({
         textTransform: 'lowercase',
         marginTop: 4,
     },
-    proofSection: {
+    winSection: {
         marginTop: 'auto',
         paddingTop: 16,
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.1)',
     },
-    proofLabel: {
+    winLabel: {
         fontSize: 9,
         color: '#8E8E93',
         letterSpacing: 2,
         textTransform: 'lowercase',
         marginBottom: 6,
     },
-    proofText: {
+    winText: {
         fontSize: 12,
         color: '#D4CDC3',
         fontStyle: 'italic',

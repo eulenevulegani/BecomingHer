@@ -1,84 +1,94 @@
 export const COPY = {
     manifesto: {
-        title: "Her Universe",
-        tagline: "You are the center of your own universe. Expand it, one star at a time.",
+        title: "HERbit",
+        tagline: "you are the center of your own herbit. grow one step at a time.",
         philosophies: [
-            "Your universe expands with every intention.",
-            "Each small action is a star you collect.",
-            "Growth is infinite, personal, and luminous.",
-            "Stars matter — not to impress, but to illuminate your path."
+            "your life expands with every intention.",
+            "each small action moves you forward.",
+            "growth is personal, steady, and meaningful.",
+            "progress matters — it illuminates your path."
         ],
-        rules: "No pressure. No performance. Just small steps, gentle movements, and collected stars — over time."
+        rules: "No pressure. No performance. Just small steps, gentle movements, and steady progress — over time."
     },
     onboarding: {
         welcome: {
-            title: "welcome to your universe.",
-            subtitle: "curated for the woman who contains multitudes.",
-            cta: "enter"
+            title: "welcome to your new self.",
+            subtitle: "curated for the woman you're becoming.",
+            cta: "begin"
+        },
+        name: {
+            title: "who are you becoming?",
+            placeholder: "enter your name",
+            cta: "continue"
+        },
+        firstHerbit: {
+            title: "what is your first herbit?",
+            helper: "choose something small and achievable, like 'morning walk' or 'journaling'.",
+            cta: "start my journey"
         },
         philosophy: {
-            title: "you don't need to conquer galaxies.",
-            subtitle: "you just need to flow toward what feels right.",
+            title: "you don't need to do everything at once.",
+            subtitle: "you just need to take the next right step.",
             cta: "i'm ready"
         },
         intention: {
-            title: "which world calls to you?",
+            title: "what do you want to focus on?",
             helper: "your path can shift. you're allowed to explore.",
             cta: "next"
         },
         firstWeek: {
-            title: "let's begin your first week.",
-            themePrompt: "choose your world",
-            movePrompt: "add 1 small move",
-            cta: "launch"
+            title: "let's begin your first herbit.",
+            themePrompt: "choose your focus",
+            movePrompt: "add 1 small herbit",
+            cta: "start"
         },
         premium: {
-            free: "explore your constellation",
-            paid: "expand your universe",
-            price: "$49.99 / year"
+            free: "7 days free trial",
+            paid: "full transformation",
+            price: "$7.99 / month or yearly plan"
         }
     },
     home: {
-        greeting: "Your universe awaits. What star will you collect today?",
+        greeting: "Welcome back. What's one step you'll take today?",
         sections: {
-            today: "your world today",
-            move: "your moves for today",
-            proof: "stars in your sky"
+            today: "today's focus",
+            move: "your daily plan",
+            wins: "wins"
         },
-        emptyProof: "even the quietest nights have hidden stars.",
+        emptyWins: "every quiet moment is an opportunity for growth.",
         affirmationPrompt: "breathe. you're exactly where you need to be."
     },
     becoming: {
-        title: "your universe",
-        header: "you are the center of your universe.",
-        empty: "your galaxy is forming, even in the silence.",
+        title: "your journey",
+        header: 'your journey, your pace.',
+        empty: "your path is forming in your daily choices.",
         pillars: {
-            health: "The world of vitality and radiant energy.",
-            finances: "The world of abundance and golden flow.",
-            relationships: "The world of connection and magnetic bonds.",
-            purpose: "The world of vision and bold direction.",
-            growth: "The world of expansion and infinite learning.",
-            environment: "The world of harmony and intentional space.",
-            spirituality: "The world of stillness and cosmic peace."
+            health: "The pillar of vitality and energy.",
+            finances: "The pillar of abundance and security.",
+            relationships: "The pillar of connection and community.",
+            purpose: "The pillar of vision and mission.",
+            growth: "The pillar of expansion and learning.",
+            environment: "The pillar of hermony and space.",
+            spirituality: "The pillar of stillness and peace."
         }
     },
     reflection: {
-        title: "cosmic reflection",
+        title: "daily reflection",
         prompts: [
-            "what world did you explore today?",
-            "what felt like gravity pulling you down?",
-            "what light carried you forward?"
+            "what did you focus on today?",
+            "what felt challenging?",
+            "what are you proud of?"
         ],
-        cta: "close today"
+        cta: "complete day"
     },
-    moves: {
-        label: "today's moves",
-        success: "a new star in your sky. ✨",
-        missed: "you didn't fall. you drifted. tomorrow is new.",
-        returning: "welcome back. your universe saved your place."
+    practices: {
+        label: 'today',
+        success: 'another step forward. ✨',
+        missed: 'it\'s okay. tomorrow is new.',
+        returning: 'welcome back.'
     },
     week_setup: {
         title: "set your focus for the next 7 days.",
-        subtitle: "this is your gravitational pull."
+        subtitle: "what will be your priority?"
     }
 };

@@ -1,3 +1,27 @@
+// Identity keywords for auto-detection from natural language
+export const IDENTITY_KEYWORDS: Record<string, string[]> = {
+    health: ['exercise', 'workout', 'walk', 'sleep', 'meditate', 'yoga', 'body', 'gym', 'run', 'stretch', 'eat', 'water', 'rest', 'energy', 'movement', 'food', 'meal'],
+    finances: ['budget', 'save', 'invest', 'money', 'expense', 'income', 'bill', 'debt', 'net worth', 'financial', 'spend', 'account', 'grant', 'funding', 'tax', 'bank'],
+    relationships: ['call', 'text', 'friend', 'family', 'date', 'partner', 'connect', 'listen', 'love', 'community', 'husband', 'wife', 'mom', 'dad', 'sister', 'brother'],
+    purpose: ['work', 'project', 'goal', 'career', 'mission', 'focus', 'deep work', 'create', 'build', 'business', 'vision', 'lead', 'strategy', 'apply', 'submit'],
+    growth: ['read', 'learn', 'study', 'journal', 'reflect', 'skill', 'course', 'book', 'podcast', 'grow', 'improve', 'practice', 'write'],
+    environment: ['clean', 'organize', 'declutter', 'tidy', 'home', 'space', 'room', 'desk', 'closet', 'kitchen', 'repair', 'laptop', 'fix', 'hardware', 'maintenance'],
+    spirituality: ['pray', 'gratitude', 'silence', 'peace', 'breathe', 'stillness', 'faith', 'morning ritual', 'quiet', 'spirit', 'meditation', 'soul']
+};
+
+// Helper function to detect identity from text
+export const detectIdentityFromText = (text: string): string | null => {
+    const lowerText = text.toLowerCase();
+    for (const [weight, keywords] of Object.entries(IDENTITY_KEYWORDS)) {
+        for (const keyword of keywords) {
+            if (lowerText.includes(keyword)) {
+                return weight;
+            }
+        }
+    }
+    return null;
+};
+
 export const BECOMING_PROMPTS = {
     intention: "Who are you practicing being right now?",
     week: "This week doesn’t need perfection. It needs honesty.",
@@ -67,7 +91,8 @@ export const BECOMING_PROMPTS = {
 
 export interface IntentionItem {
     id: string;
-    pillar: string;
+    label: string; // Display name (The Vital Self, etc.)
+    pillar: string; // Deprecated, keeping for safety but prefer label
     intention: string;
     description: string;
     practices: string[];
@@ -77,49 +102,56 @@ export interface IntentionItem {
 export const INTENTIONS_MAP: IntentionItem[] = [
     {
         id: 'health',
-        pillar: 'Health',
+        label: 'The Vital Self',
+        pillar: 'The Vital Self',
         intention: 'becoming a woman who honors her body',
         description: 'Your energy, strength, sleep, and emotional wellbeing.',
         practices: ['10 minutes of somatic movement', 'choose a nourishing meal', '8 hours of restorative sleep', 'practice a moment of stillness'],
     },
     {
         id: 'finances',
-        pillar: 'Finances',
+        label: 'The Prosperous Self',
+        pillar: 'The Prosperous Self',
         intention: 'becoming a woman who masters her abundance',
         description: 'How you earn, manage, save, invest, and grow money.',
         practices: ['check net worth with gratitude', 'review my budget for today', 'save or invest a small amount', 'read 10 mins of financial wisdom'],
     },
     {
         id: 'relationships',
-        pillar: 'Relationships',
+        label: 'The Beloved Self',
+        pillar: 'The Beloved Self',
         intention: 'becoming a woman who nurtures her community',
         description: 'Family, friendships, romantic connections, and networks.',
         practices: ['send a note of appreciation', 'practice active listening', 'set or honor a boundary', 'schedule quality time'],
     },
     {
         id: 'purpose',
-        pillar: 'Purpose',
+        label: 'The Purposeful Self',
+        pillar: 'The Purposeful Self',
         intention: 'becoming a woman who leads with vision',
         description: 'Your work, mission, goals, and the impact you make.',
         practices: ['write 3 long-term vision goals', 'block 1 hour for deep work', 'take one step toward a mission', 'refine my professional presence'],
     },
     {
         id: 'growth',
-        pillar: 'Personal Growth',
+        label: 'The Wise Self',
+        pillar: 'The Wise Self',
         intention: 'becoming a woman who evolves daily',
         description: 'How you evolve mentally, emotionally, and intellectually.',
         practices: ['read 10 pages of a book', 'journal my evening reflection', 'learn one new small skill', 'practice self-awareness'],
     },
     {
         id: 'environment',
-        pillar: 'Environment',
+        label: 'The Harmonious Self',
+        pillar: 'The Harmonious Self',
         intention: 'becoming a woman who curates her space',
         description: 'Your surroundings and daily systems—home and digital.',
         practices: ['declutter one small area', 'refine a daily morning system', 'organize my digital workspace', 'add a touch of beauty to my home'],
     },
     {
         id: 'spirituality',
-        pillar: 'Spirituality',
+        label: 'The Soulful Self',
+        pillar: 'The Soulful Self',
         intention: 'becoming a woman of inner peace',
         description: 'Your beliefs, values, gratitude, and connection.',
         practices: ['sit in silence for 5 minutes', 'practice a prayer or meditation', 'record 3 specific gratitudes', 're-align with a core value'],
@@ -162,20 +194,20 @@ export const GRATITUDE_PROMPTS = [
     "What are you quietly grateful for?"
 ];
 
-export const GRATITUDE_TREE_PROMPT = GRATITUDE_PROMPTS[0];
+export const GRATITUDE_POD_PROMPT = GRATITUDE_PROMPTS[0];
 
 export const IDENTITY_SHIFT_FACTS = [
     {
         title: "Small wins are proof.",
-        fact: "identity is built through 'votes'. every time you practice a habit, you are casting a vote for the person you want to become."
+        fact: "identity is built through 'votes'. every time you practice a herbit, you are casting a vote for the person you want to become."
     },
     {
         title: "The 66-day myth.",
         fact: "while common wisdom says 21 days, research suggests it takes an average of 66 days for a new behavior to become automatic. patience is part of the practice."
     },
     {
-        title: "Identity-first habits.",
-        fact: "the most effective way to change your habits is not to focus on what you want to achieve, but on who you wish to become."
+        title: "Identity-first herbits.",
+        fact: "the most effective way to change your herbits is not to focus on what you want to achieve, but on who you wish to become."
     },
     {
         title: "The power of 1%.",

@@ -24,7 +24,7 @@ export default function PaywallScreen() {
         { icon: <Crown size={20} color={primaryColor} />, title: 'MULTIPLE SEASONS', desc: 'Activate and track multiple growth paths.' },
         { icon: <Shield size={20} color={primaryColor} />, title: 'DEEP ARCHIVE', desc: 'Full access to your previous weekly reflections.' },
         { icon: <Zap size={20} color={primaryColor} />, title: 'SENSORY RECAPS', desc: 'Cinematic AI-summaries of your identity shift.' },
-        { icon: <Sparkles size={20} color={primaryColor} />, title: 'UNLIMITED PROOFS', desc: 'Record every whisper of growth.' },
+        { icon: <Sparkles size={20} color={primaryColor} />, title: 'UNLIMITED WINS', desc: 'Record every whisper of growth.' },
     ];
 
     return (

@@ -1,6 +1,6 @@
 import { Button } from '@/components/Button';
 import { SerifText, Text, useThemeColor, View } from '@/components/Themed';
-import { AuraBackground } from '@/components/visuals/AuraBackground';
+import { BrandBackground } from '@/components/visuals/BrandBackground';
 import { CelebrationEffect } from '@/components/visuals/CelebrationEffect';
 import { BECOMING_PROMPTS } from '@/constants/Content';
 import { useUser, Win } from '@/context/UserContext';
@@ -46,7 +46,7 @@ export default function WinRecordingModal() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <AuraBackground />
+      <BrandBackground />
 
       <Animated.View entering={FadeIn.delay(200)} style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>

@@ -3,14 +3,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import { IntentionItem } from '@/constants/Content';
 
-export interface Move {
+export interface Herbit {
     id: string;
     text: string;
     status: string | null;
     timestamp: string | null;
 }
 
-export interface DailyMove {
+export interface DailyHerbit {
     id: string;
     text: string;
     completed: boolean;
@@ -28,14 +28,34 @@ export interface PracticeLog {
 export interface FocusCycle {
     intention: string | null;
     practices: string[];
-    weekStartDate: string;
+    startDate: string;
 }
 
-export interface PillarProgress {
+export interface IdentityProgress {
     daysActive: number;
-    movesCompleted: number;
+    herbitsCompleted: number;
     streak: number;
     lastActiveDate: string | null;
+}
+
+export interface MainHerbit {
+    id: string;
+    text: string;
+    identity: string | null;
+    schedule: 'daily' | 'weekdays' | 'weekends' | 'custom' | 'frequency';
+    customDays?: number[];
+    frequencyCount?: number; // e.g., 3
+    frequencyPeriod?: 'week' | 'month'; // e.g., 'week'
+    timeOfDay?: 'morning' | 'anytime' | 'evening';
+    createdAt: string;
+    createdVia: 'voice' | 'text';
+}
+
+export interface HerbitLog {
+    herbitId: string;
+    date: string;
+    completed: boolean;
+    completedAt: string | null;
 }
 
 export interface JourneyTitle {
@@ -43,6 +63,15 @@ export interface JourneyTitle {
     description: string;
     unlockedAt: string;
     milestone: string;
+}
+
+export interface Goal {
+    id: string;
+    text: string;
+    period: 'day' | 'month' | 'year';
+    completed: boolean;
+    createdAt: string;
+    targetPeriod?: string; // e.g., "2024-W12", "2024-Q1", "2024"
 }
 
 export interface Win {
@@ -63,13 +92,19 @@ export interface UserState {
     lastReflectionDate: string | null;
     isPremium: boolean;
     activePersonality: 'wise-friend' | 'muse' | 'anchor' | 'pioneer';
-    dailyMoves: DailyMove[];
+    dailyHerbits: DailyHerbit[];
     lastMorningSetup: string | null;
     lastEveningClose: string | null;
     // Journey tracking
-    pillarProgress: Record<string, PillarProgress>;
+    identityProgress: Record<string, IdentityProgress>;
     journeyTitle: JourneyTitle;
     totalDaysActive: number;
+    // Herbit planner
+    herbits: MainHerbit[];
+    herbitLogs: HerbitLog[];
+    // Hierarchical goals
+    goals: Goal[];
+    name: string;
 }
 
 const DEFAULT_JOURNEY_TITLE: JourneyTitle = {
@@ -89,12 +124,16 @@ const INITIAL_STATE: UserState = {
     lastReflectionDate: null,
     isPremium: false,
     activePersonality: 'wise-friend',
-    dailyMoves: [],
+    dailyHerbits: [],
     lastMorningSetup: null,
     lastEveningClose: null,
-    pillarProgress: {},
+    identityProgress: {},
     journeyTitle: DEFAULT_JOURNEY_TITLE,
     totalDaysActive: 0,
+    herbits: [],
+    herbitLogs: [],
+    goals: [],
+    name: '',
 };
 
 interface UserContextType {
@@ -112,16 +151,33 @@ interface UserContextType {
     isLoading: boolean;
     getStreak: () => number;
     // Daily loop helpers
-    setDailyMoves: (moves: DailyMove[]) => void;
-    toggleMoveComplete: (moveId: string) => void;
+    setDailyHerbits: (herbits: DailyHerbit[]) => void;
+    toggleHerbitComplete: (herbitId: string) => void;
     startMorning: () => void;
     closeEvening: () => void;
     getTimeOfDay: () => 'morning' | 'afternoon' | 'evening';
     // Journey helpers
-    updatePillarProgress: (pillarId: string) => void;
+    updateIdentityProgress: (identityId: string) => void;
     setJourneyTitle: (title: JourneyTitle) => void;
-    getPillarProgressPercent: (pillarId: string) => number;
+    getIdentityProgressPercent: (identityId: string) => number;
+    // ...
+    // Herbit helpers
+    addHerbit: (herbit: MainHerbit) => void;
+    removeHerbit: (herbitId: string) => void;
+    logHerbitCompletion: (herbitId: string, completed: boolean, date?: string) => void;
+    getTodaysHerbits: (date?: string) => MainHerbit[];
+    getHerbitStreak: (herbitId: string) => number;
+    getIdentityActivity: (identityId: string, days: number) => number;
     getTotalProgress: () => number;
+    getCuratedIdentity: () => { name: string; description: string };
+    // Goal helpers
+    addGoal: (goal: Goal) => void;
+    removeGoal: (goalId: string) => void;
+    toggleGoal: (goalId: string) => void;
+    getBecomingXP: () => number;
+    getBecomingLevel: () => number;
+    getNextLevelXP: () => number;
+    getIdentityColor: (identity: string) => string;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -136,11 +192,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const loadState = async () => {
         try {
-            const savedState = await AsyncStorage.getItem('proofa_user_state');
+            const savedState = await AsyncStorage.getItem('herbit_user_state');
             if (savedState) {
                 const parsed = JSON.parse(savedState);
-                // Merge with INITIAL_STATE to ensure new fields (like practiceLogs) exist
-                // even for users with old data.
+                // Merge with INITIAL_STATE
                 setState({ ...INITIAL_STATE, ...parsed });
             }
         } catch (e) {
@@ -152,7 +207,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const saveState = async (newState: UserState) => {
         try {
-            await AsyncStorage.setItem('proofa_user_state', JSON.stringify(newState));
+            await AsyncStorage.setItem('herbit_user_state', JSON.stringify(newState));
         } catch (e) {
             console.error('Failed to save state', e);
         }
@@ -239,12 +294,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 
     const resetState = async () => {
+        console.log('[UserContext] Resetting state...');
         try {
-            await AsyncStorage.removeItem('proofa_user_state');
-            setState(INITIAL_STATE);
+            await AsyncStorage.removeItem('herbit_user_state');
+            await AsyncStorage.removeItem('becoming_user_state'); // Also clear old key
+            await AsyncStorage.removeItem('proofa_user_state');  // And the really old one
         } catch (e) {
-            console.error('Failed to reset state', e);
+            console.error('[UserContext] Failed to clear AsyncStorage', e);
         }
+        setState({ ...INITIAL_STATE });
     };
 
     const getStreak = () => {
@@ -285,22 +343,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Daily loop helpers
-    const setDailyMoves = (moves: DailyMove[]) => {
+    const setDailyHerbits = (herbits: DailyHerbit[]) => {
         setState((prev) => {
-            const newState = { ...prev, dailyMoves: moves };
+            const newState = { ...prev, dailyHerbits: herbits };
             saveState(newState);
             return newState;
         });
     };
 
-    const toggleMoveComplete = (moveId: string) => {
+    const toggleHerbitComplete = (herbitId: string) => {
         setState((prev) => {
-            const newMoves = prev.dailyMoves.map(m =>
-                m.id === moveId
-                    ? { ...m, completed: !m.completed, completedAt: !m.completed ? new Date().toISOString() : null }
-                    : m
+            const newHerbits = prev.dailyHerbits.map(h =>
+                h.id === herbitId
+                    ? { ...h, completed: !h.completed, completedAt: !h.completed ? new Date().toISOString() : null }
+                    : h
             );
-            const newState = { ...prev, dailyMoves: newMoves };
+            const newState = { ...prev, dailyHerbits: newHerbits };
             saveState(newState);
             return newState;
         });
@@ -332,12 +390,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Journey helpers
-    const updatePillarProgress = (pillarId: string) => {
+    const updateIdentityProgress = (identityId: string) => {
         setState((prev) => {
             const today = new Date().toISOString().split('T')[0];
-            const currentProgress = prev.pillarProgress[pillarId] || {
+            const currentProgress = prev.identityProgress[identityId] || {
                 daysActive: 0,
-                movesCompleted: 0,
+                herbitsCompleted: 0,
                 streak: 0,
                 lastActiveDate: null
             };
@@ -349,7 +407,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
             const newProgress = {
                 daysActive: isNewDay ? currentProgress.daysActive + 1 : currentProgress.daysActive,
-                movesCompleted: currentProgress.movesCompleted + 1,
+                herbitsCompleted: currentProgress.herbitsCompleted + 1,
                 streak: isNewDay ? (wasYesterday ? currentProgress.streak + 1 : 1) : currentProgress.streak,
                 lastActiveDate: today
             };
@@ -359,7 +417,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
             const newState = {
                 ...prev,
-                pillarProgress: { ...prev.pillarProgress, [pillarId]: newProgress },
+                identityProgress: { ...prev.identityProgress, [identityId]: newProgress },
                 totalDaysActive: newTotalDays
             };
             saveState(newState);
@@ -375,45 +433,301 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
-    const getPillarProgressPercent = (pillarId: string): number => {
-        const progress = state.pillarProgress[pillarId];
+    const getIdentityProgressPercent = (identityId: string): number => {
+        const progress = state.identityProgress[identityId];
         if (!progress) return 0;
-        // Formula: (daysActive * 5) + (movesCompleted * 2) + (streak * 3), max 100
-        return Math.min(100, (progress.daysActive * 5) + (progress.movesCompleted * 2) + (progress.streak * 3));
+        // Formula: (daysActive * 5) + (herbitsCompleted * 2) + (streak * 3), max 100
+        return Math.min(100, (progress.daysActive * 5) + (progress.herbitsCompleted * 2) + (progress.streak * 3));
     };
 
     const getTotalProgress = (): number => {
-        const pillarIds = Object.keys(state.pillarProgress);
-        if (pillarIds.length === 0) return 0;
-        const total = pillarIds.reduce((sum, id) => sum + getPillarProgressPercent(id), 0);
-        return Math.round(total / 7); // Average across all 7 pillars
+        const identityIds = Object.keys(state.identityProgress);
+        if (identityIds.length === 0) return 0;
+        const total = identityIds.reduce((sum, id) => sum + getIdentityProgressPercent(id), 0);
+        return Math.round(total / 7); // Average across all 7 identities
     };
 
+    // Herbit helpers
+    const addHerbit = (herbit: MainHerbit) => {
+        setState((prev) => {
+            let identity = herbit.identity;
+            if (!identity) {
+                const { detectIdentityFromText } = require('@/constants/Content');
+                identity = detectIdentityFromText(herbit.text);
+            }
+            const newHerbit = { ...herbit, identity };
+            const newState = { ...prev, herbits: [...prev.herbits, newHerbit] };
+            saveState(newState);
+            return newState;
+        });
+    };
+
+    const removeHerbit = (herbitId: string) => {
+        setState((prev) => {
+            const newState = {
+                ...prev,
+                herbits: prev.herbits.filter(h => h.id !== herbitId),
+                herbitLogs: prev.herbitLogs.filter(l => l.herbitId !== herbitId)
+            };
+            saveState(newState);
+            return newState;
+        });
+    };
+
+    const logHerbitCompletion = (herbitId: string, completed: boolean, date?: string) => {
+        const targetDate = date || new Date().toISOString().split('T')[0];
+        setState((prev) => {
+            // Remove existing log for this date if any
+            const filteredLogs = prev.herbitLogs.filter(
+                l => !(l.herbitId === herbitId && l.date === targetDate)
+            );
+            const newLog: HerbitLog = {
+                herbitId,
+                date: targetDate,
+                completed,
+                completedAt: completed ? new Date().toISOString() : null
+            };
+            const newState = { ...prev, herbitLogs: [...filteredLogs, newLog] };
+            saveState(newState);
+
+            // Also update identity progress if completed
+            if (completed) {
+                const herbit = prev.herbits.find(h => h.id === herbitId);
+                if (herbit?.identity) {
+                    updateIdentityProgress(herbit.identity);
+                }
+            }
+
+            return newState;
+        });
+    };
+
+    const getTodaysHerbits = (date?: string): MainHerbit[] => {
+        const targetDate = date ? new Date(date) : new Date();
+        const dayOfWeek = targetDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const todayStr = targetDate.toISOString().split('T')[0];
+
+        return state.herbits.filter(herbit => {
+            // 1. Basic schedules
+            if (herbit.schedule === 'daily') return true;
+            if (herbit.schedule === 'weekdays') return dayOfWeek >= 1 && dayOfWeek <= 5;
+            if (herbit.schedule === 'weekends') return dayOfWeek === 0 || dayOfWeek === 6;
+            if (herbit.schedule === 'custom' && herbit.customDays) {
+                return herbit.customDays.includes(dayOfWeek);
+            }
+
+            // 2. Frequency-based habits (e.g., 3x a week)
+            if (herbit.schedule === 'frequency' && herbit.frequencyCount && herbit.frequencyPeriod) {
+                // If it's already completed today, show it (as done)
+                const completedToday = state.herbitLogs.some(
+                    l => l.herbitId === herbit.id && l.date === todayStr && l.completed
+                );
+                if (completedToday) return true;
+
+                // Calculate completions in current period
+                const completions = state.herbitLogs.filter(l => {
+                    if (l.herbitId !== herbit.id || !l.completed) return false;
+                    const logDate = new Date(l.date);
+
+                    if (herbit.frequencyPeriod === 'week') {
+                        // Rough week check (within last 7 days)
+                        const diff = (targetDate.getTime() - logDate.getTime()) / (1000 * 3600 * 24);
+                        return diff >= 0 && diff < 7;
+                    } else {
+                        // Month check
+                        return logDate.getMonth() === targetDate.getMonth() &&
+                            logDate.getFullYear() === targetDate.getFullYear();
+                    }
+                }).length;
+
+                return completions < herbit.frequencyCount;
+            }
+
+            return true;
+        });
+    };
+
+    const getHerbitStreak = (herbitId: string): number => {
+        const logs = state.herbitLogs
+            .filter(l => l.herbitId === herbitId && l.completed)
+            .map(l => l.date)
+            .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+        if (logs.length === 0) return 0;
+
+        let streak = 0;
+        let currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+
+        for (let i = 0; i < logs.length; i++) {
+            const logDate = new Date(logs[i]);
+            const expectedDate = new Date(currentDate);
+            expectedDate.setDate(currentDate.getDate() - i);
+
+            if (logDate.toDateString() === expectedDate.toDateString()) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+
+        return streak;
+    };
+
+    const getIdentityActivity = (identityId: string, days: number): number => {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+
+        const herbitIds = state.herbits
+            .filter(h => h.identity?.toLowerCase() === identityId.toLowerCase())
+            .map(h => h.id);
+
+        const completions = state.herbitLogs.filter(
+            l => herbitIds.includes(l.herbitId) &&
+                l.completed &&
+                new Date(l.date) >= cutoff
+        );
+
+        return completions.length;
+    };
+
+    const getCuratedIdentity = () => {
+        // Calculate activity in each identity over the last 7 days
+        const identityIds = ['health', 'finances', 'relationships', 'purpose', 'growth', 'environment', 'spirituality'];
+        const activity = identityIds.map(id => ({
+            id,
+            count: getIdentityActivity(id, 7)
+        }));
+
+        const topIdentity = activity.sort((a, b) => b.count - a.count)[0];
+
+        if (!topIdentity || topIdentity.count === 0) {
+            return {
+                name: "The Seeker",
+                description: "you are beginning to listen to the quiet voice within."
+            };
+        }
+
+        const descriptors: Record<string, string> = {
+            health: "a woman who honors herself",
+            finances: "a woman who masters abundance",
+            relationships: "a woman who nurtures community",
+            purpose: "a woman who leads with vision",
+            growth: "a woman who evolves daily",
+            environment: "a woman who curates her space",
+            spirituality: "a woman of inner peace"
+        };
+
+        return {
+            name: `I am becoming ${descriptors[topIdentity.id] || "a woman of intention"}`,
+            description: `Based on your recent commitment to ${topIdentity.id}.`
+        };
+    };
+
+    const getBecomingXP = () => {
+        const herbitXP = state.herbitLogs.filter(l => l.completed).length * 10;
+        const winXP = (state.wins?.length || 0) * 50;
+        return herbitXP + winXP;
+    };
+
+    const getBecomingLevel = () => {
+        const xp = getBecomingXP();
+        if (xp < 100) return 1;
+        if (xp < 300) return 2;
+        if (xp < 600) return 3;
+        if (xp < 1000) return 4;
+        if (xp < 1500) return 5;
+        if (xp < 2100) return 6;
+        return Math.floor(6 + (xp - 2100) / 1000) + 1;
+    };
+
+    const getNextLevelXP = () => {
+        const xp = getBecomingXP();
+        if (xp < 100) return 100;
+        if (xp < 300) return 300;
+        if (xp < 600) return 600;
+        if (xp < 1000) return 1000;
+        if (xp < 1500) return 1500;
+        if (xp < 2100) return 2100;
+        const currentLevelBasis = 2100 + (getBecomingLevel() - 7) * 1000;
+        return currentLevelBasis + 1000;
+    };
+
+    const getIdentityColor = (identity: string) => {
+        const { IDENTITY_COLORS } = require('@/constants/Colors');
+        return IDENTITY_COLORS[identity?.toLowerCase() as keyof typeof IDENTITY_COLORS] || '#FFF';
+    };
+
+    const addGoal = (goal: Goal) => {
+        setState((prev) => {
+            const newState = { ...prev, goals: [...(prev.goals || []), goal] };
+            saveState(newState);
+            return newState;
+        });
+    };
+
+    const removeGoal = (goalId: string) => {
+        setState((prev) => {
+            const newState = { ...prev, goals: (prev.goals || []).filter(g => g.id !== goalId) };
+            saveState(newState);
+            return newState;
+        });
+    };
+
+    const toggleGoal = (goalId: string) => {
+        setState((prev) => {
+            const newState = {
+                ...prev,
+                goals: (prev.goals || []).map(g =>
+                    g.id === goalId ? { ...g, completed: !g.completed } : g
+                )
+            };
+            saveState(newState);
+            return newState;
+        });
+    };
+
+    const contextValue = React.useMemo(() => ({
+        state,
+        updateState,
+        addWin,
+        logPractice,
+        setFocusCycle,
+        addCustomIdentity,
+        removeCustomIdentity,
+        completeOnboarding,
+        setPremium,
+        setActivePersonality,
+        resetState,
+        isLoading,
+        getStreak,
+        setDailyHerbits,
+        toggleHerbitComplete,
+        startMorning,
+        closeEvening,
+        getTimeOfDay,
+        updateIdentityProgress,
+        setJourneyTitle,
+        getIdentityProgressPercent,
+        getTotalProgress,
+        addHerbit,
+        removeHerbit,
+        logHerbitCompletion,
+        getTodaysHerbits,
+        getHerbitStreak,
+        getIdentityActivity,
+        getCuratedIdentity,
+        addGoal,
+        removeGoal,
+        toggleGoal,
+        getBecomingXP,
+        getBecomingLevel,
+        getNextLevelXP,
+        getIdentityColor
+    }), [state, isLoading]);
+
     return (
-        <UserContext.Provider value={{
-            state,
-            updateState,
-            addWin,
-            logPractice,
-            setFocusCycle,
-            addCustomIdentity,
-            removeCustomIdentity,
-            completeOnboarding,
-            setPremium,
-            setActivePersonality,
-            resetState,
-            isLoading,
-            getStreak,
-            setDailyMoves,
-            toggleMoveComplete,
-            startMorning,
-            closeEvening,
-            getTimeOfDay,
-            updatePillarProgress,
-            setJourneyTitle,
-            getPillarProgressPercent,
-            getTotalProgress
-        }}>
+        <UserContext.Provider value={contextValue}>
             {children}
         </UserContext.Provider>
     );

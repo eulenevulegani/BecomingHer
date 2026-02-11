@@ -1,206 +1,235 @@
 import { Button } from '@/components/Button';
-import { GlassView, SerifText, Text, View } from '@/components/Themed';
+import { SerifText, Text, View } from '@/components/Themed';
 import { CosmicBackground } from '@/components/visuals/CosmicBackground';
-import { FloatingPlanet, PLANET_POSITIONS } from '@/components/visuals/FloatingPlanet';
 import Colors from '@/constants/Colors';
-import { INTENTIONS_MAP } from '@/constants/Content';
+import { Typography } from '@/constants/Typography';
 import { useUser } from '@/context/UserContext';
 import { COPY } from '@/lib/copy';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, StatusBar, StyleSheet } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { View as DefaultView, Dimensions, KeyboardAvoidingView, Platform, StatusBar, StyleSheet, TextInput } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
-    const { updateState } = useUser();
+    const { updateState, addHerbit } = useUser();
     const router = useRouter();
-    const [selectedIntention, setSelectedIntention] = useState<string | null>(null);
+    const [step, setStep] = useState<'welcome' | 'name' | 'herbit'>('welcome');
+    const [name, setName] = useState('');
+    const [herbitText, setHerbitText] = useState('');
 
-    const handleSelect = (intention: string) => {
-        // If tapping the same planet again, navigate directly
-        if (selectedIntention === intention) {
-            handleLaunch();
-            return;
-        }
-        setSelectedIntention(intention);
+    const handleNextStep = () => {
+        if (step === 'welcome') setStep('name');
+        else if (step === 'name' && name.trim()) setStep('herbit');
     };
 
     const handleLaunch = async () => {
-        if (!selectedIntention) return;
+        if (!herbitText.trim()) return;
 
+        // Save name
         updateState({
             hasCompletedOnboarding: true,
-            activeIntentions: [selectedIntention],
-            currentFocusCycle: {
-                intention: selectedIntention,
-                practices: INTENTIONS_MAP.find(i => i.intention === selectedIntention)?.practices || [],
-                weekStartDate: new Date().toISOString()
-            }
+            name: name.trim(),
+            activeIntentions: [],
+            currentFocusCycle: null
         });
+
+        // Add first herbit
+        const newHerbit = {
+            id: Math.random().toString(36).substring(7),
+            text: herbitText.trim(),
+            identity: null, // Will be auto-detected in addHerbit
+            schedule: 'daily' as const,
+            createdAt: new Date().toISOString(),
+            createdVia: 'text' as const,
+            timeOfDay: 'anytime' as const,
+        };
+        addHerbit(newHerbit);
+
         router.replace('/(tabs)/today');
     };
 
-    const selectedData = INTENTIONS_MAP.find(i => i.intention === selectedIntention);
-
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
             <StatusBar barStyle="light-content" />
             <CosmicBackground />
 
-            {/* Title Section */}
-            <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.header}>
-                <Text style={styles.label}>her universe</Text>
-                <SerifText weight="bold" style={styles.title}>
-                    {COPY.onboarding.intention.title}
-                </SerifText>
-                <Text style={styles.subtitle}>{COPY.onboarding.intention.helper}</Text>
-            </Animated.View>
+            <DefaultView style={styles.content}>
+                {step === 'welcome' && (
+                    <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.welcomeContent}>
+                        <View style={styles.header} lightColor="transparent">
+                            <Text style={styles.label}>HERbit</Text>
+                            <SerifText weight="bold" style={styles.mainWelcomeTitle}>
+                                {COPY.onboarding.welcome.title}
+                            </SerifText>
+                            <Text style={styles.subtitle}>{COPY.onboarding.welcome.subtitle}</Text>
+                        </View>
 
-            {/* Floating Planets Universe */}
-            <Animated.View entering={FadeIn.delay(500)} style={styles.universeContainer}>
-                {INTENTIONS_MAP.map((item, index) => (
-                    <FloatingPlanet
-                        key={item.id}
-                        pillar={item.pillar}
-                        intention={item.intention}
-                        isSelected={selectedIntention === item.intention}
-                        onPress={() => handleSelect(item.intention)}
-                        position={PLANET_POSITIONS[index % PLANET_POSITIONS.length]}
-                        size={55 + (index % 3) * 8}
-                        floatDelay={index * 200}
-                    />
-                ))}
-            </Animated.View>
+                        <Animated.View entering={FadeInUp.delay(300).springify()} style={styles.footer}>
+                            <Button
+                                variant="glow"
+                                title={COPY.onboarding.welcome.cta}
+                                onPress={handleNextStep}
+                                color={Colors.brand.primary}
+                                size="lg"
+                            />
+                        </Animated.View>
+                    </Animated.View>
+                )}
 
-            {/* Selected Identity Display */}
-            {selectedIntention && (
-                <Animated.View entering={FadeInUp.delay(100).springify()} style={styles.selectionPanelContainer}>
-                    <GlassView intensity={20} style={styles.selectionPanel}>
-                        <Text style={styles.selectedLabel}>your identity</Text>
-                        <SerifText style={styles.selectedIntention}>
-                            "{selectedIntention}"
-                        </SerifText>
-                        {selectedData && (
-                            <Text style={styles.selectedDescription} numberOfLines={2}>
-                                {selectedData.description}
+                {step === 'name' && (
+                    <Animated.View entering={FadeInDown} style={styles.stepContent}>
+                        <View style={styles.header} lightColor="transparent">
+                            <Text style={styles.label}>her identity</Text>
+                            <SerifText weight="bold" style={styles.title}>
+                                {COPY.onboarding.name.title}
+                            </SerifText>
+                            <Text style={styles.subtitle}>your name will anchor your daily mantras.</Text>
+                        </View>
+
+                        <View style={styles.inputContainer} lightColor="transparent">
+                            <TextInput
+                                style={styles.input}
+                                placeholder={COPY.onboarding.name.placeholder}
+                                placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                                value={name}
+                                onChangeText={setName}
+                                autoFocus
+                                keyboardAppearance="dark"
+                                autoCapitalize="words"
+                            />
+                        </View>
+
+                        <Animated.View entering={FadeInUp.delay(200)} style={styles.footer}>
+                            <Button
+                                variant="glow"
+                                title={COPY.onboarding.name.cta}
+                                onPress={handleNextStep}
+                                color={Colors.brand.primary}
+                                size="lg"
+                                disabled={!name.trim()}
+                            />
+                        </Animated.View>
+                    </Animated.View>
+                )}
+
+                {step === 'herbit' && (
+                    <Animated.View entering={FadeInDown} style={styles.stepContent}>
+                        <View style={styles.header} lightColor="transparent">
+                            <Text style={styles.label}>her first step</Text>
+                            <SerifText weight="bold" style={styles.title}>
+                                {COPY.onboarding.firstHerbit.title}
+                            </SerifText>
+                            <Text style={styles.subtitle}>
+                                {COPY.onboarding.firstHerbit.helper}
                             </Text>
-                        )}
-                    </GlassView>
-                </Animated.View>
-            )}
+                        </View>
 
-            {/* Launch Button */}
-            {selectedIntention && (
-                <Animated.View entering={FadeInUp.delay(200).springify()} style={styles.footer}>
-                    <Button
-                        variant="glow"
-                        title="begin my journey"
-                        onPress={handleLaunch}
-                        color={Colors.cosmic.stardustGold}
-                        size="lg"
-                    />
-                </Animated.View>
-            )}
+                        <View style={styles.inputContainer} lightColor="transparent">
+                            <TextInput
+                                style={styles.input}
+                                placeholder="e.g. morning walk"
+                                placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                                value={herbitText}
+                                onChangeText={setHerbitText}
+                                autoFocus
+                                keyboardAppearance="dark"
+                                autoCapitalize="none"
+                                multiline
+                            />
+                        </View>
 
-            {/* Subtle hint when nothing selected */}
-            {!selectedIntention && (
-                <Animated.View entering={FadeIn.delay(1500)} style={styles.hintContainer}>
-                    <Text style={styles.hintText}>tap a world to begin</Text>
-                </Animated.View>
-            )}
-        </View>
+                        <Animated.View entering={FadeInUp.delay(200)} style={styles.footer}>
+                            <Button
+                                variant="glow"
+                                title={COPY.onboarding.firstHerbit.cta}
+                                onPress={handleLaunch}
+                                color={Colors.brand.primary}
+                                size="lg"
+                                disabled={!herbitText.trim()}
+                            />
+                        </Animated.View>
+                    </Animated.View>
+                )}
+            </DefaultView>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.cosmic.deepSpace,
+        backgroundColor: Colors.brand.deep,
+    },
+    content: {
+        flex: 1,
     },
     header: {
-        paddingTop: 70,
+        paddingTop: 100,
         paddingHorizontal: 32,
         alignItems: 'center',
         zIndex: 10,
     },
     label: {
         fontSize: 10,
-        color: Colors.cosmic.stardustGold,
+        color: Colors.brand.primary,
         letterSpacing: 4,
         marginBottom: 12,
         textTransform: 'lowercase',
     },
+    welcomeContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    stepContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    mainWelcomeTitle: {
+        fontSize: 42,
+        color: '#FFFFFF',
+        textAlign: 'center',
+        marginBottom: 16,
+        lineHeight: 52,
+        letterSpacing: -0.5,
+    },
     title: {
-        fontSize: 26,
+        fontSize: 32,
         color: '#FFF',
         textAlign: 'center',
         marginBottom: 8,
+        lineHeight: 40,
     },
     subtitle: {
-        fontSize: 13,
-        color: '#8E8E93',
+        fontSize: 15,
+        color: 'rgba(255, 255, 255, 0.6)',
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: 22,
+        fontWeight: '300',
+        paddingHorizontal: 20,
     },
-
-    // Universe Container
-    universeContainer: {
-        flex: 1,
-        marginTop: 20,
-        marginHorizontal: 10,
-        position: 'relative',
-        minHeight: SCREEN_HEIGHT * 0.45,
-    },
-
-    // Selection Panel
-    selectionPanelContainer: {
-        marginHorizontal: 24,
-    },
-    selectionPanel: {
-        paddingVertical: 24,
-        paddingHorizontal: 28,
+    inputContainer: {
+        paddingHorizontal: 40,
+        marginTop: 40,
         alignItems: 'center',
     },
-    selectedLabel: {
-        fontSize: 9,
-        color: Colors.cosmic.stardustGold,
-        letterSpacing: 2,
-        marginBottom: 8,
-        textTransform: 'uppercase',
-    },
-    selectedIntention: {
-        fontSize: 17,
+    input: {
+        fontSize: 24,
         color: '#FFF',
+        fontFamily: Typography.families.serif,
         textAlign: 'center',
-        lineHeight: 24,
-        marginBottom: 6,
+        width: '100%',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     },
-    selectedDescription: {
-        fontSize: 12,
-        color: '#8E8E93',
-        textAlign: 'center',
-        lineHeight: 18,
-    },
-
-    // Footer
     footer: {
-        padding: 24,
-        paddingBottom: 50,
-    },
-
-    // Hint
-    hintContainer: {
-        position: 'absolute',
-        bottom: 80,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-    },
-    hintText: {
-        fontSize: 12,
-        color: '#6E6E73',
-        letterSpacing: 1,
+        padding: 32,
+        paddingBottom: 60,
+        width: '100%',
     },
 });

@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from 'expo-router';
-import { Compass, Moon, Sparkles } from 'lucide-react-native';
+import { Calendar, List, Sparkles } from 'lucide-react-native';
 import React from 'react';
 
 import { View } from '@/components/Themed';
@@ -12,7 +12,7 @@ export default function TabLayout() {
   const { state, isLoading } = useUser();
 
   if (isLoading) {
-    return <View style={{ flex: 1, backgroundColor: Colors.cosmic.deepSpace }} />;
+    return <View style={{ flex: 1, backgroundColor: Colors.brand.background }} />;
   }
 
   if (!state.hasCompletedOnboarding) {
@@ -26,16 +26,16 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
         tabBarStyle: {
           borderTopColor: 'rgba(255,255,255,0.05)',
-          backgroundColor: Colors.cosmic.deepSpace,
+          backgroundColor: Colors.brand.background,
           paddingTop: 12,
           height: 84,
           paddingBottom: 28,
         },
         tabBarLabelStyle: {
           fontFamily: 'Inter_500Medium',
-          fontSize: 9,
+          fontSize: 10,
           textTransform: 'lowercase',
-          letterSpacing: 2,
+          letterSpacing: 1,
         },
         headerShown: false,
       }}>
@@ -43,35 +43,35 @@ export default function TabLayout() {
         name="today"
         options={{
           title: 'today',
+          tabBarIcon: ({ color }) => <Calendar size={20} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="planner"
+        options={{
+          title: 'plan',
+          tabBarIcon: ({ color }) => <List size={20} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="me"
+        options={{
+          title: 'me',
           tabBarIcon: ({ color }) => <Sparkles size={20} color={color} />,
         }}
       />
 
+      {/* Hidden tabs - kept for navigation but not shown in tab bar */}
       <Tabs.Screen
-        name="journey"
-        options={{
-          title: 'stars',
-          tabBarIcon: ({ color }) => <Compass size={20} color={color} />,
-        }}
-      />
-
-      <Tabs.Screen
-        name="becoming"
-        options={{
-          title: 'universe',
-          tabBarIcon: ({ color }) => <Moon size={20} color={color} />,
-        }}
-      />
-
-      {/* Hidden tabs - keep files but hide from nav */}
-      <Tabs.Screen
-        name="week"
+        name="community"
         options={{
           href: null,
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="week"
         options={{
           href: null,
         }}

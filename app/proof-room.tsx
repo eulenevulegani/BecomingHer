@@ -5,7 +5,7 @@ import { useUser, Win } from '@/context/UserContext';
 import { useRouter } from 'expo-router';
 import { Camera, ChevronLeft } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { View as DefaultView, ScrollView, StatusBar, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Alert, View as DefaultView, ScrollView, StatusBar, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function ProofRoomScreen() {
@@ -51,13 +51,13 @@ export default function ProofRoomScreen() {
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.infoSection}>
-                    <Text style={styles.subtitle}>Log a promise you kept to yourself today.</Text>
+                    <Text style={styles.subtitle}>Log a win or a herbit you kept today.</Text>
                 </Animated.View>
 
                 <Animated.View entering={FadeInDown.delay(400)} style={styles.inputCard}>
                     <TextInput
                         style={styles.input}
-                        placeholder="I went for a 20 min walk..."
+                        placeholder="I crushed my morning meditation..."
                         placeholderTextColor="rgba(255,255,255,0.3)"
                         value={proofText}
                         onChangeText={setProofText}
@@ -67,7 +67,23 @@ export default function ProofRoomScreen() {
 
                     <View style={styles.divider} />
 
-                    <TouchableOpacity style={styles.photoButton}>
+                    <TouchableOpacity
+                        style={styles.photoButton}
+                        onPress={async () => {
+                            const { launchImageLibraryAsync, MediaTypeOptions } = require('expo-image-picker');
+                            const result = await launchImageLibraryAsync({
+                                mediaTypes: MediaTypeOptions.Images,
+                                allowsEditing: true,
+                                aspect: [1, 1],
+                                quality: 0.8,
+                            });
+
+                            if (!result.canceled) {
+                                console.log('[ProofRoom] Photo selected:', result.assets[0].uri);
+                                Alert.alert('Photo Added', 'Your proof has been captured.');
+                            }
+                        }}
+                    >
                         <Camera size={20} color={primaryColor} />
                         <Text style={[styles.photoText, { color: primaryColor }]}>Add Photo</Text>
                     </TouchableOpacity>
@@ -82,7 +98,7 @@ export default function ProofRoomScreen() {
                     disabled={!proofText.trim()}
                 >
                     <Text style={[styles.submitText, { color: proofText.trim() ? '#000' : 'rgba(255,255,255,0.2)' }]}>
-                        Log Promise
+                        Log Win
                     </Text>
                 </TouchableOpacity>
             </ScrollView>

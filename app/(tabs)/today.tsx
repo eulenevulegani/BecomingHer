@@ -1,735 +1,587 @@
 import { Button } from '@/components/Button';
-import { GlassView, SerifText, Text, useThemeColor, View } from '@/components/Themed';
+import { HerbitItem } from '@/components/HerbitItem'; // New Import
+import { GlassView, SerifText, Text, useThemeColor } from '@/components/Themed';
+import { BrandBackground } from '@/components/visuals/BrandBackground';
 import { CelebrationEffect } from '@/components/visuals/CelebrationEffect';
-import { CosmicBackground } from '@/components/visuals/CosmicBackground';
-import { CycleReflectionModal } from '@/components/visuals/CycleReflectionModal';
-import { PremiumModal } from '@/components/visuals/PremiumModal';
-import Colors, { PLANET_COLORS } from '@/constants/Colors';
-import { DailyMove, useUser, Win } from '@/context/UserContext';
+import { DailyWeaver } from '@/components/visuals/DailyWeaver'; // Added import
+import Colors from '@/constants/Colors';
+import { MainHerbit, useUser } from '@/context/UserContext';
 import { AIService } from '@/lib/AIService';
-import { COPY } from '@/lib/copy';
 import { useRouter } from 'expo-router';
-import { Check, Edit2, Moon, Plus, Sparkles } from 'lucide-react-native';
+import { Plus, Sparkles } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { View as DefaultView, Dimensions, ScrollView, StatusBar, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import { ActivityIndicator, View as DefaultView, Dimensions, ScrollView, StatusBar, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
-export default function TodayScreen() {
+export default function FlowScreen() {
   const {
     state,
-    logPractice,
-    setFocusCycle,
-    updateState,
-    addWin,
-    setDailyMoves,
-    toggleMoveComplete,
-    startMorning,
-    closeEvening,
-    getTimeOfDay
+    addHerbit,
+    removeHerbit,
+    logHerbitCompletion,
+    getTodaysHerbits,
+    getHerbitStreak,
+    getCuratedIdentity
   } = useUser();
   const router = useRouter();
   const primaryColor = useThemeColor({}, 'primary');
 
-  // Core state
-  const [showAffirmation, setShowAffirmation] = useState(true);
-  const [arrivalState, setArrivalState] = useState<'none' | 'showing'>('none');
-  const [isReflectionVisible, setIsReflectionVisible] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [isPremiumModalVisible, setIsPremiumModalVisible] = useState(false);
+  const [celebrationMessage, setCelebrationMessage] = useState(''); // New State
+  const [isAddingHerbit, setIsAddingHerbit] = useState(false);
+  const [newHerbitText, setNewHerbitText] = useState('');
+  const [selectedFrequency, setSelectedFrequency] = useState<MainHerbit['schedule']>('daily');
+  const [freqCount, setFreqCount] = useState(3);
+  const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<MainHerbit['timeOfDay']>('anytime');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [detectedIdentity, setDetectedIdentity] = useState<string | null>(null);
+  const [isClassifying, setIsClassifying] = useState(false);
 
-  // Morning/Evening state
-  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening'>(getTimeOfDay());
-  const [eveningPrompt, setEveningPrompt] = useState<string>('');
-  const [reflectionText, setReflectionText] = useState('');
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const todaysHerbits = getTodaysHerbits(selectedDate);
+  const todayStr = new Date().toISOString().split('T')[0];
 
-  // Editing state
-  const [editingMoveIndex, setEditingMoveIndex] = useState<number | null>(null);
-  const [tempMoveText, setTempMoveText] = useState('');
-  const [isAddingCustomMove, setIsAddingCustomMove] = useState(false);
-  const [newCustomMoveText, setNewCustomMoveText] = useState('');
+  // Generate week dates
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i - 3); // Center around today
+    return {
+      full: d.toISOString().split('T')[0],
+      day: d.toLocaleString('en-US', { weekday: 'short' }).toLowerCase(),
+      date: d.getDate(),
+      isToday: d.toISOString().split('T')[0] === todayStr
+    };
+  });
 
-  const currentFocusCycle = state.currentFocusCycle;
-  const currentIntention = currentFocusCycle?.intention || "becoming someone who trusts herself";
-  const today = new Date().toISOString().split('T')[0];
-  const hasDoneMorningSetup = state.lastMorningSetup === today;
-  const hasDoneEveningClose = state.lastEveningClose === today;
-
-  // Get pillar color for current identity
-  const getPillarColor = () => {
-    const pillar = currentFocusCycle?.intention?.toLowerCase() || '';
-    if (pillar.includes('body') || pillar.includes('health')) return PLANET_COLORS.health;
-    if (pillar.includes('abundance') || pillar.includes('finance')) return PLANET_COLORS.finances;
-    if (pillar.includes('community') || pillar.includes('relationship')) return PLANET_COLORS.relationships;
-    if (pillar.includes('vision') || pillar.includes('purpose')) return PLANET_COLORS.purpose;
-    if (pillar.includes('evolve') || pillar.includes('growth')) return PLANET_COLORS.growth;
-    if (pillar.includes('space') || pillar.includes('environment')) return PLANET_COLORS.environment;
-    if (pillar.includes('peace') || pillar.includes('spiritual')) return PLANET_COLORS.spirituality;
-    return primaryColor;
+  // Get completion status for each herbit
+  const getHerbitCompletion = (herbitId: string): boolean => {
+    return state.herbitLogs.some(
+      log => log.herbitId === herbitId && log.date === selectedDate && log.completed
+    );
   };
 
-  const accentColor = getPillarColor();
+  // Get identity color
+  const getIdentityColorLocal = (identityId: string | null) => {
+    const { IDENTITY_COLORS } = require('@/constants/Colors');
+    if (!identityId) return primaryColor;
+    return IDENTITY_COLORS[identityId as keyof typeof IDENTITY_COLORS] || primaryColor;
+  };
 
-  // Initialize daily moves from focus cycle if not set for today
-  useEffect(() => {
-    if (currentFocusCycle && (!state.dailyMoves.length || !hasDoneMorningSetup)) {
-      const initialMoves: DailyMove[] = currentFocusCycle.practices.slice(0, 3).map((p, i) => ({
-        id: `move-${i}-${Date.now()}`,
-        text: p,
-        completed: false,
-        completedAt: null
-      }));
-      setDailyMoves(initialMoves);
+  // Handle manual herbit add
+  const handleAddHerbit = async () => {
+    if (!newHerbitText.trim()) return;
+
+    let identity = detectedIdentity;
+
+    // If no manual identity or keyword detection worked, try AI classification
+    if (!identity) {
+      setIsClassifying(true);
+      const { detectIdentityFromText } = require('@/constants/Content');
+      identity = detectIdentityFromText(newHerbitText);
+      if (!identity) {
+        identity = await AIService.classifyHerbit(newHerbitText);
+      }
+      setIsClassifying(false);
     }
-  }, [currentFocusCycle?.weekStartDate]);
 
-  // Get AI evening prompt when entering evening mode
-  useEffect(() => {
-    if (timeOfDay === 'evening' && !eveningPrompt) {
-      const completedCount = state.dailyMoves.filter(m => m.completed).length;
-      const totalCount = state.dailyMoves.length;
-      AIService.getEveningReflectionPrompt(completedCount, totalCount, state.activePersonality)
-        .then(prompt => setEveningPrompt(prompt));
-    }
-  }, [timeOfDay, state.dailyMoves]);
+    const newHerbit: MainHerbit = {
+      id: `herbit-${Date.now()}`,
+      text: newHerbitText.trim(),
+      identity,
+      schedule: selectedFrequency,
+      frequencyCount: selectedFrequency === 'frequency' ? freqCount : undefined,
+      frequencyPeriod: selectedFrequency === 'frequency' ? 'week' : undefined,
+      timeOfDay: selectedTimeOfDay,
+      createdAt: new Date().toISOString(),
+      createdVia: 'text'
+    };
 
-  // Affirmation auto-dismiss
-  useEffect(() => {
-    const timer = setTimeout(() => handleDismissArrival(), 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    addHerbit(newHerbit);
+    setNewHerbitText('');
+    setDetectedIdentity(null);
+    setIsAddingHerbit(false);
+    setDetectedIdentity(null);
+    setIsAddingHerbit(false);
 
-  // Check for end of week cycle
+    // Feedback for creation
+    setCelebrationMessage("Intention set.");
+    setShowCelebration(true);
+  };
+
+  // Effect to auto-detect identity from text via keywords (faster feedback)
   useEffect(() => {
-    if (state.currentFocusCycle?.weekStartDate) {
-      const startDate = new Date(state.currentFocusCycle.weekStartDate);
-      const now = new Date();
-      const diffDays = (now.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
-      if (diffDays >= 7 && state.lastReflectionDate !== state.currentFocusCycle.weekStartDate) {
-        setIsReflectionVisible(true);
+    if (newHerbitText.trim().length > 3) {
+      const { detectIdentityFromText } = require('@/constants/Content');
+      const identity = detectIdentityFromText(newHerbitText);
+      if (identity) {
+        setDetectedIdentity(identity);
       }
     }
-  }, [state.currentFocusCycle?.weekStartDate, state.lastReflectionDate]);
+  }, [newHerbitText]);
 
-  const handleDismissArrival = () => {
-    if (arrivalState === 'showing') return;
-    setShowAffirmation(false);
-    setArrivalState('showing');
-    setTimeout(() => setArrivalState('none'), 1500);
-  };
+  // Handle herbit toggle
+  const handleToggleHerbit = (herbitId: string) => {
+    const isCompleted = getHerbitCompletion(herbitId);
+    const herbit = todaysHerbits.find(h => h.id === herbitId);
 
-  const handleStartMyDay = async () => {
-    startMorning();
-    setShowCelebration(true);
-  };
+    logHerbitCompletion(herbitId, !isCompleted, selectedDate);
 
-  const handleCloseMyDay = () => {
-    if (reflectionText.trim()) {
-      const proof: Win = {
-        id: Math.random().toString(36).substr(2, 9),
-        text: reflectionText,
-        type: 'text',
-        timestamp: new Date().toISOString()
-      };
-      addWin(proof);
-    }
-
-    state.dailyMoves.forEach(move => {
-      logPractice({
-        id: Math.random().toString(36).substr(2, 9),
-        practice: move.text,
-        level: move.completed ? 'yes' : 'not_today',
-        timestamp: new Date().toISOString()
+    // Only celebrate completion, not un-checking
+    if (!isCompleted && herbit) {
+      const streak = getHerbitStreak(herbit.id);
+      const { FeedbackService } = require('@/lib/FeedbackService');
+      const message = FeedbackService.generateFeedback({
+        identity: herbit.identity,
+        streak: streak + 1, // Anticipate the new streak
+        timeOfDay: herbit.timeOfDay || 'anytime', // Use herbit's time or default
+        text: herbit.text
       });
-    });
-
-    closeEvening();
-    setReflectionText('');
-    setShowCelebration(true);
-  };
-
-  const handleUpdateMove = (index: number, newText: string) => {
-    const updatedMoves = [...state.dailyMoves];
-    updatedMoves[index] = { ...updatedMoves[index], text: newText };
-    setDailyMoves(updatedMoves);
-    setEditingMoveIndex(null);
-  };
-
-  const handleAddCustomMove = () => {
-    if (!state.isPremium && state.dailyMoves.length >= 3) {
-      setIsPremiumModalVisible(true);
-      return;
-    }
-    setIsAddingCustomMove(true);
-  };
-
-  const handleSaveCustomMove = () => {
-    if (!newCustomMoveText.trim()) return;
-    const newMove: DailyMove = {
-      id: `custom-${Date.now()}`,
-      text: newCustomMoveText.trim(),
-      completed: false,
-      completedAt: null
-    };
-    setDailyMoves([...state.dailyMoves, newMove]);
-    setNewCustomMoveText('');
-    setIsAddingCustomMove(false);
-    setShowCelebration(true);
-  };
-
-  const handleToggleMove = (moveId: string) => {
-    toggleMoveComplete(moveId);
-    const move = state.dailyMoves.find(m => m.id === moveId);
-    if (move && !move.completed) {
+      setCelebrationMessage(message);
       setShowCelebration(true);
     }
   };
 
-  const handleContinueIdentity = () => {
-    if (state.currentFocusCycle) {
-      setFocusCycle({
-        ...state.currentFocusCycle,
-        weekStartDate: new Date().toISOString()
-      });
-      updateState({ lastReflectionDate: state.currentFocusCycle.weekStartDate });
-    }
-    setIsReflectionVisible(false);
-  };
-
-  const handlePivot = () => {
-    if (state.currentFocusCycle) {
-      updateState({ lastReflectionDate: state.currentFocusCycle.weekStartDate });
-    }
-    setIsReflectionVisible(false);
-    router.push('/(tabs)/becoming');
-  };
-
-  const getGreeting = () => {
-    if (timeOfDay === 'morning') return 'good morning';
-    if (timeOfDay === 'afternoon') return 'good afternoon';
-    return 'good evening';
-  };
-
-  const completedCount = state.dailyMoves.filter(m => m.completed).length;
-  const totalMoves = state.dailyMoves.length;
-  const isMorningMode = timeOfDay === 'morning' && !hasDoneMorningSetup;
-  const isEveningMode = timeOfDay === 'evening';
-  const canEdit = !isEveningMode;
-
-  // Affirmation screen
-  if (showAffirmation) {
-    return (
-      <TouchableOpacity activeOpacity={1} onPress={handleDismissArrival} style={styles.arrivalContainer}>
-        <StatusBar barStyle="light-content" />
-        <CosmicBackground />
-        <Animated.View entering={FadeIn.duration(800)} exiting={FadeOut.duration(500)}>
-          <SerifText style={styles.affirmationText}>{COPY.home.affirmationPrompt}</SerifText>
-        </Animated.View>
-        <Text style={styles.tapToContinue}>tap anywhere</Text>
-      </TouchableOpacity>
-    );
-  }
-
-  // Identity reveal screen
-  if (arrivalState === 'showing') {
-    return (
-      <View style={styles.arrivalContainer}>
-        <StatusBar barStyle="light-content" />
-        <CosmicBackground />
-        <Animated.View entering={FadeIn.duration(800)} exiting={FadeOut.duration(600)} style={{ alignItems: 'center' }}>
-          <Text style={styles.arrivalLabel}>your world today</Text>
-          <SerifText style={[styles.arrivalIdentity, { color: accentColor }]}>
-            "{currentIntention.replace('becoming a woman who ', '').replace('becoming a woman of ', '')}"
-          </SerifText>
-        </Animated.View>
-      </View>
-    );
-  }
+  const completedCount = todaysHerbits.filter(h => getHerbitCompletion(h.id)).length;
+  const totalHerbits = todaysHerbits.length;
 
   return (
-    <View style={styles.container}>
+    <DefaultView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <CosmicBackground />
+      <BrandBackground />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.header}>
-          <DefaultView style={styles.headerRow}>
-            <DefaultView>
-              <DefaultView style={styles.greetingRow}>
-                <DefaultView style={[styles.planetDot, { backgroundColor: accentColor }]} />
-                <Text style={styles.greeting}>{getGreeting()}</Text>
-              </DefaultView>
-              <SerifText weight="bold" style={styles.intentionText}>
-                {currentIntention.replace('becoming a woman who ', '').replace('becoming a woman of ', '')}
-              </SerifText>
-            </DefaultView>
+        <DailyWeaver />
+        {/* Calendar Stripe */}
+        <DefaultView style={styles.calendarContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.calendarScroll}>
+            {weekDates.map((item) => (
+              <TouchableOpacity
+                key={item.full}
+                onPress={() => setSelectedDate(item.full)}
+                style={[
+                  styles.dateCard,
+                  selectedDate === item.full && styles.dateCardActive
+                ]}
+              >
+                <Text style={[styles.dateDay, selectedDate === item.full && styles.dateTextActive]}>
+                  {item.day}
+                </Text>
+                <Text style={[styles.dateNumber, selectedDate === item.full && styles.dateTextActive]}>
+                  {item.date}
+                </Text>
+                {item.isToday && <DefaultView style={styles.todayIndicator} />}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </DefaultView>
 
-            {/* Star counter */}
-            <DefaultView style={styles.starCounter}>
-              <Sparkles size={14} color={Colors.cosmic.stardustGold} />
-              <Text style={styles.starCount}>{state.wins?.length || 0}</Text>
-            </DefaultView>
+        {/* Header */}
+        <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
+          <SerifText weight="regular" style={styles.identityMantra}>
+            {getCuratedIdentity().name}
+          </SerifText>
+          <DefaultView style={styles.progressRow}>
+            <Text style={styles.tagline}>
+              {completedCount}/{totalHerbits} herbits {selectedDate === todayStr ? 'today' : 'on ' + selectedDate.split('-').slice(1).join('/')}
+            </Text>
           </DefaultView>
         </Animated.View>
 
-        {/* Morning Setup CTA */}
-        {isMorningMode && (
-          <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.morningCTA}>
-            <GlassView intensity={10} style={styles.morningCard}>
-              <Text style={styles.morningTitle}>set your flow for today</Text>
-              <Text style={styles.morningSubtitle}>
-                choose which paths you'll walk before the day begins
-              </Text>
-            </GlassView>
-          </Animated.View>
-        )}
-
-        {/* Evening Reflection */}
-        {isEveningMode && !hasDoneEveningClose && (
-          <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.eveningSection}>
-            <GlassView intensity={10} style={styles.eveningCard}>
-              <Text style={styles.eveningLabel}>cosmic reflection</Text>
-              <SerifText style={styles.eveningPrompt}>
-                "{eveningPrompt || "what light did you find today?"}"
-              </SerifText>
-              <TextInput
-                style={styles.reflectionInput}
-                placeholder="whisper to the stars..."
-                placeholderTextColor="rgba(255,255,255,0.3)"
-                value={reflectionText}
-                onChangeText={setReflectionText}
-                multiline
-              />
-            </GlassView>
-          </Animated.View>
-        )}
-
-        {/* Daily Moves */}
-        {state.dailyMoves.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.movesSection}>
-            <DefaultView style={styles.movesSectionHeader}>
-              <Text style={styles.label}>
-                {isEveningMode ? 'your moves today' : COPY.home.sections.move}
-              </Text>
-              <Text style={styles.moveCount}>{completedCount}/{totalMoves}</Text>
-            </DefaultView>
-
-            <View style={styles.movesList}>
-              {state.dailyMoves.map((move, index) => {
-                const isEditing = editingMoveIndex === index;
+        {/* Herbits List */}
+        <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.herbitsSection}>
+          <DefaultView style={styles.herbitsList}>
+            {todaysHerbits.length === 0 ? (
+              <GlassView intensity={10} style={styles.emptyCard}>
+                <Sparkles size={32} color={Colors.brand.primary} />
+                <Text style={styles.emptyText}>no herbits yet</Text>
+                <Text style={styles.emptyHint}>
+                  type to add your first herbit
+                </Text>
+              </GlassView>
+            ) : (
+              todaysHerbits.map((herbit, index) => {
+                const isCompleted = getHerbitCompletion(herbit.id);
+                const identityColor = getIdentityColorLocal(herbit.identity);
+                const streak = getHerbitStreak(herbit.id);
 
                 return (
-                  <Animated.View
-                    key={move.id}
-                    entering={FadeInDown.delay(500 + index * 100)}
-                    style={[styles.moveCard, move.completed && styles.moveCardDone]}
-                  >
-                    <TouchableOpacity
-                      style={styles.moveContent}
-                      onPress={() => !isEveningMode && !move.completed && handleToggleMove(move.id)}
-                      disabled={move.completed || isEditing}
-                    >
-                      <DefaultView style={styles.moveMain}>
-                        <DefaultView style={[
-                          styles.checkbox,
-                          move.completed && { backgroundColor: accentColor, borderColor: accentColor }
-                        ]}>
-                          {move.completed && <Check size={12} color="#000" />}
-                        </DefaultView>
-
-                        {isEditing && canEdit ? (
-                          <TextInput
-                            style={styles.moveInput}
-                            value={tempMoveText}
-                            onChangeText={setTempMoveText}
-                            autoFocus
-                            onBlur={() => handleUpdateMove(index, tempMoveText)}
-                            onSubmitEditing={() => handleUpdateMove(index, tempMoveText)}
-                          />
-                        ) : (
-                          <Text style={[styles.moveName, move.completed && styles.moveNameDone]}>
-                            {move.text}
-                          </Text>
-                        )}
-                      </DefaultView>
-
-                      {canEdit && !move.completed && !isEditing && (
-                        <TouchableOpacity
-                          onPress={() => {
-                            setEditingMoveIndex(index);
-                            setTempMoveText(move.text);
-                          }}
-                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        >
-                          <Edit2 size={14} color="#8E8E93" />
-                        </TouchableOpacity>
-                      )}
-                    </TouchableOpacity>
-                  </Animated.View>
-                );
-              })}
-
-              {canEdit && !isAddingCustomMove && (
-                <TouchableOpacity style={styles.addMoveButton} onPress={handleAddCustomMove}>
-                  <Plus size={16} color="#8E8E93" />
-                  <Text style={styles.addMoveText}>add a move</Text>
-                </TouchableOpacity>
-              )}
-
-              {isAddingCustomMove && (
-                <View style={[styles.moveCard, { borderColor: accentColor }]}>
-                  <TextInput
-                    style={styles.moveInput}
-                    placeholder="your next move..."
-                    placeholderTextColor="rgba(255,255,255,0.3)"
-                    value={newCustomMoveText}
-                    onChangeText={setNewCustomMoveText}
-                    autoFocus
-                    onBlur={() => !newCustomMoveText.trim() && setIsAddingCustomMove(false)}
-                    onSubmitEditing={handleSaveCustomMove}
+                  <HerbitItem
+                    key={herbit.id}
+                    index={index}
+                    herbit={herbit}
+                    isCompleted={isCompleted}
+                    identityColor={identityColor}
+                    streak={streak}
+                    onToggle={() => handleToggleHerbit(herbit.id)}
+                    onDelete={() => removeHerbit(herbit.id)}
                   />
-                </View>
-              )}
-            </View>
-          </Animated.View>
-        )}
+                );
+              })
+            )}
 
-        {/* Action Button */}
-        {(isMorningMode || (isEveningMode && !hasDoneEveningClose)) && (
-          <Animated.View entering={FadeInDown.delay(600).springify()} style={styles.actionSection}>
-            <Button
-              variant="glow"
-              color={Colors.cosmic.stardustGold}
-              title={isMorningMode ? 'begin today' : 'close today'}
-              onPress={isMorningMode ? handleStartMyDay : handleCloseMyDay}
-              size="lg"
-            />
-          </Animated.View>
-        )}
+            {/* Add Herbit Button */}
+            {!isAddingHerbit ? (
+              <TouchableOpacity onPress={() => setIsAddingHerbit(true)}>
+                <GlassView intensity={5} style={styles.addHerbitButton}>
+                  <Plus size={16} color={Colors.brand.textMuted} />
+                  <Text style={styles.addHerbitText}>add herbit</Text>
+                </GlassView>
+              </TouchableOpacity>
+            ) : (
+              <Animated.View entering={FadeInDown.delay(100).springify()}>
+                <GlassView intensity={15} style={styles.addHerbitCard}>
+                  <TextInput
+                    style={styles.herbitInput}
+                    placeholder="what will you practice?"
+                    placeholderTextColor="rgba(255,255,255,0.3)"
+                    value={newHerbitText}
+                    onChangeText={setNewHerbitText}
+                    autoFocus
+                    onSubmitEditing={handleAddHerbit}
+                  />
 
-        {/* Completed state */}
-        {hasDoneEveningClose && (
-          <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.completedSection}>
-            <GlassView intensity={10} style={styles.completedCard}>
-              <Moon size={28} color={Colors.cosmic.stardustGold} />
-              <SerifText style={styles.completedTitle}>day complete ✨</SerifText>
-              <Text style={styles.completedSubtitle}>
-                {completedCount} stars collected today.
-                {'\n'}rest well. tomorrow awaits.
-              </Text>
-            </GlassView>
-          </Animated.View>
-        )}
+                  <DefaultView style={styles.addHerbitActions}>
+                    <DefaultView style={styles.classifyingInfo}>
+                      {isClassifying && (
+                        <>
+                          <ActivityIndicator size="small" color={primaryColor} />
+                          <Text style={styles.classifyingText}>classifying...</Text>
+                        </>
+                      )}
+                    </DefaultView>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setIsAddingHerbit(false);
+                        setDetectedIdentity(null);
+                        setNewHerbitText('');
+                      }}
+                      style={styles.cancelButton}
+                    >
+                      <Text style={styles.cancelText}>cancel</Text>
+                    </TouchableOpacity>
+                    <Button
+                      variant="glow"
+                      title="add"
+                      onPress={handleAddHerbit}
+                      color={primaryColor}
+                      size="sm"
+                      disabled={isClassifying}
+                    />
+                  </DefaultView>
+                </GlassView>
+              </Animated.View>
+            )}
+          </DefaultView>
+        </Animated.View>
+
+
       </ScrollView>
-
-      <CycleReflectionModal
-        isVisible={isReflectionVisible}
-        onClose={() => setIsReflectionVisible(false)}
-        onContinue={handleContinueIdentity}
-        onPivot={handlePivot}
-        currentIdentity={currentIntention}
-        stats={{
-          wins: state.wins?.filter(w =>
-            state.currentFocusCycle?.weekStartDate &&
-            new Date(w.timestamp) >= new Date(state.currentFocusCycle.weekStartDate)
-          ).length || 0,
-          practices: state.practiceLogs?.filter(l =>
-            state.currentFocusCycle?.weekStartDate &&
-            new Date(l.timestamp) >= new Date(state.currentFocusCycle.weekStartDate) &&
-            l.level !== 'not_today'
-          ).length || 0
-        }}
-      />
-
-      <PremiumModal
-        isVisible={isPremiumModalVisible}
-        onClose={() => setIsPremiumModalVisible(false)}
-        onUpgrade={() => {
-          updateState({ isPremium: true });
-          setIsPremiumModalVisible(false);
-        }}
-      />
 
       <CelebrationEffect
         isVisible={showCelebration}
+        message={celebrationMessage}
         onComplete={() => setShowCelebration(false)}
       />
-    </View>
+    </DefaultView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.cosmic.deepSpace,
+    backgroundColor: '#0A0A0F',
   },
   scrollContent: {
     paddingBottom: 100,
   },
-  arrivalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.cosmic.deepSpace,
-  },
-  arrivalLabel: {
-    fontSize: 11,
-    color: Colors.cosmic.stardustGold,
-    letterSpacing: 3,
-    textTransform: 'lowercase',
-    marginBottom: 16,
-  },
-  arrivalIdentity: {
-    fontSize: 28,
-    textAlign: 'center',
-    paddingHorizontal: 40,
-    lineHeight: 40,
-  },
-  affirmationText: {
-    fontSize: 22,
-    color: '#E8E2D9',
-    textAlign: 'center',
-    paddingHorizontal: 50,
-    lineHeight: 34,
-  },
-  tapToContinue: {
-    fontSize: 11,
-    color: '#8E8E93',
-    marginTop: 24,
-    opacity: 0.5,
-    letterSpacing: 2,
-  },
 
   // Header
   header: {
+    paddingTop: 20,
+    paddingHorizontal: 24,
+    marginBottom: 40,
+    alignItems: 'center',
+  },
+  calendarContainer: {
     paddingTop: 60,
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    backgroundColor: 'transparent',
+    paddingBottom: 10,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  calendarScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
   },
-  greetingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
-  },
-  planetDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  greeting: {
-    fontSize: 11,
-    color: '#8E8E93',
-    letterSpacing: 2,
-    textTransform: 'lowercase',
-  },
-  intentionText: {
-    fontSize: 26,
-    color: '#FFF',
-    lineHeight: 34,
-    maxWidth: width - 120,
-  },
-  starCounter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  dateCard: {
+    width: 60,
+    height: 80,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-  },
-  starCount: {
-    fontSize: 14,
-    color: Colors.cosmic.stardustGold,
-    fontWeight: '600',
-  },
-  label: {
-    fontSize: 10,
-    color: '#8E8E93',
-    letterSpacing: 2,
-    textTransform: 'lowercase',
-  },
-
-  // Morning CTA
-  morningCTA: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    backgroundColor: 'transparent',
-  },
-  morningCard: {
-    padding: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  morningTitle: {
-    fontSize: 15,
-    color: '#FFF',
-    marginBottom: 6,
-  },
-  morningSubtitle: {
-    fontSize: 13,
-    color: '#8E8E93',
-    lineHeight: 20,
-  },
-
-  // Evening
-  eveningSection: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    backgroundColor: 'transparent',
-  },
-  eveningCard: {
-    padding: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  eveningLabel: {
-    fontSize: 10,
-    color: Colors.cosmic.stardustGold,
-    letterSpacing: 2,
-    textTransform: 'lowercase',
-    marginBottom: 12,
-  },
-  eveningPrompt: {
-    fontSize: 17,
-    color: '#D4CDC3',
-    fontStyle: 'italic',
-    lineHeight: 26,
-    marginBottom: 16,
-  },
-  reflectionInput: {
-    fontSize: 15,
-    color: '#FFF',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-    paddingTop: 16,
-    minHeight: 70,
-    textAlignVertical: 'top',
-  },
-
-  // Moves
-  movesSection: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    backgroundColor: 'transparent',
-  },
-  movesSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  moveCount: {
-    fontSize: 12,
-    color: '#6E6E73',
-  },
-  movesList: {
-    gap: 10,
-    backgroundColor: 'transparent',
-  },
-  moveCard: {
-    padding: 18,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  moveCardDone: {
-    opacity: 0.5,
-  },
-  moveContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  moveMain: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  moveName: {
-    fontSize: 15,
+  dateCardActive: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: Colors.brand.primary + '40',
+  },
+  dateDay: {
+    fontSize: 10,
+    color: '#8E8E93',
+    textTransform: 'lowercase',
+    marginBottom: 4,
+  },
+  dateNumber: {
+    fontSize: 18,
+    fontFamily: 'Inter_600SemiBold',
     color: '#FFF',
+  },
+  dateTextActive: {
+    color: Colors.brand.primary,
+  },
+  todayIndicator: {
+    position: 'absolute',
+    bottom: 8,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.brand.primary,
+  },
+  identityMantra: {
+    fontSize: 28,
+    color: '#FFF',
+    textAlign: 'center',
+    lineHeight: 36,
+    marginBottom: 12,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tagline: {
+    fontSize: 12,
+    color: Colors.brand.primary,
+    letterSpacing: 1,
+    textTransform: 'lowercase',
+  },
+
+  // Voice Section
+  voiceSection: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  voiceHint: {
+    fontSize: 12,
+    color: '#6E6E73',
+    marginTop: 12,
+    letterSpacing: 1,
+  },
+
+  // Habits
+  herbitsSection: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  herbitsList: {
+    gap: 12,
+  },
+  herbitCard: {
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  herbitCardDone: {
+    opacity: 0.7,
+  },
+  herbitContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  herbitMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  checkbox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  herbitInfo: {
     flex: 1,
   },
-  moveNameDone: {
+  herbitText: {
+    fontSize: 17,
+    color: '#FFF',
+  },
+  herbitTextDone: {
     textDecorationLine: 'line-through',
     color: '#6E6E73',
   },
-  moveInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#FFF',
-    padding: 0,
+  herbitMeta: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
   },
-  addMoveButton: {
+  identityBadge: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  streakBadge: {
+    fontSize: 10,
+    color: '#FFA500',
+  },
+  deleteButton: {
+    padding: 8,
+  },
+
+  // Empty State
+  emptyCard: {
+    padding: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    gap: 12,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#FFF',
+  },
+  emptyHint: {
+    fontSize: 13,
+    color: '#6E6E73',
+    textAlign: 'center',
+  },
+
+  // Add Herbit
+  addHerbitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    padding: 14,
-    borderRadius: 16,
+    padding: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  addMoveText: {
+  addHerbitText: {
     fontSize: 13,
     color: '#6E6E73',
   },
-
-  // Action Button
-  actionSection: {
-    paddingHorizontal: 24,
-    marginTop: 8,
-    backgroundColor: 'transparent',
+  addHerbitCard: {
+    padding: 20,
+    borderRadius: 20,
+    gap: 16,
   },
-
-  // Completed
-  completedSection: {
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    backgroundColor: 'transparent',
-  },
-  completedCard: {
-    padding: 36,
-    borderRadius: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  completedTitle: {
-    fontSize: 24,
+  herbitInput: {
+    fontSize: 16,
     color: '#FFF',
-    marginTop: 16,
+    padding: 0,
     marginBottom: 8,
   },
-  completedSubtitle: {
+  frequencyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 4,
+  },
+  frequencyAdjustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  nButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  nText: {
     fontSize: 13,
+    color: '#FFF',
+  },
+  timesText: {
+    fontSize: 12,
     color: '#8E8E93',
-    textAlign: 'center',
-    lineHeight: 22,
+  },
+  timeOfDayRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+  },
+  timeButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: 11,
+    color: '#8E8E93',
+    textTransform: 'lowercase',
+  },
+  freqButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  freqText: {
+    fontSize: 11,
+    color: '#8E8E93',
+    textTransform: 'lowercase',
+  },
+  addHerbitActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 16,
+  },
+  cancelButton: {
+    padding: 8,
+  },
+  cancelText: {
+    fontSize: 13,
+    color: '#6E6E73',
+  },
+  pillarRow: {
+    marginBottom: 4,
+  },
+  classifyingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  classifyingText: {
+    fontSize: 11,
+    color: '#8E8E93',
+    fontStyle: 'italic',
   },
 
+  // Actions
+  actionsSection: {
+    paddingHorizontal: 24,
+  },
 });

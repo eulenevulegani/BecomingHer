@@ -1,4 +1,3 @@
-import Colors from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
@@ -74,7 +73,7 @@ function Star({ star }: { star: Star }) {
 
 export function CosmicBackground() {
     const nebulaFloat = useSharedValue(0);
-    const stars = useMemo(() => generateStars(50), []);
+    const stars = useMemo(() => generateStars(100), []);
 
     useEffect(() => {
         nebulaFloat.value = withRepeat(
@@ -106,14 +105,14 @@ export function CosmicBackground() {
         <View style={[StyleSheet.absoluteFill, styles.container]} pointerEvents="none">
             {/* Deep space base */}
             <LinearGradient
-                colors={[Colors.cosmic.voidBlack, Colors.cosmic.deepSpace, Colors.cosmic.deepSpace]}
+                colors={['#050508', '#0A0A0F', '#0A0A0F']}
                 style={StyleSheet.absoluteFill}
             />
 
-            {/* Nebula glow 1 - Purple */}
+            {/* Nebula glow 1 - Deep Night Blue (was Purple) */}
             <Animated.View style={[styles.nebula, nebula1Style]}>
                 <LinearGradient
-                    colors={[Colors.cosmic.nebulaPurple, 'transparent']}
+                    colors={['#102A43', 'transparent']}
                     style={styles.nebulaGradient}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
@@ -140,9 +139,8 @@ export function CosmicBackground() {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: Colors.cosmic.voidBlack,
+        backgroundColor: '#050508',
         overflow: 'hidden',
-        zIndex: -1,
     },
     nebula: {
         position: 'absolute',

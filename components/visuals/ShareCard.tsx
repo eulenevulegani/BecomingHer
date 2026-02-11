@@ -58,7 +58,7 @@ export function ShareCard({ cycle, stats, showWatermark = true }: ShareCardProps
                         <View style={styles.statsRow}>
                             <View style={styles.statItem}>
                                 <SerifText style={styles.statValue}>{stats.wins}</SerifText>
-                                <Text style={styles.statLabel}>Moments of Proof</Text>
+                                <Text style={styles.statLabel}>Wins</Text>
                             </View>
                             <View style={styles.statItem}>
                                 <SerifText style={styles.statValue}>{stats.practices}</SerifText>

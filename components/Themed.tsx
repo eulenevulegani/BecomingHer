@@ -60,7 +60,7 @@ export function View(props: ViewProps) {
 export function GlassView(props: ViewProps & { intensity?: number }) {
   const { style, lightColor, darkColor, intensity = 40, ...otherProps } = props;
   const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'glass');
-  const borderColor = "rgba(255, 255, 255, 0.08)"; // Universal subtle border
+  const borderColor = "rgba(255, 255, 255, 0.05)"; // Subtler border for better glass effect
 
   return (
     <BlurView
@@ -94,7 +94,7 @@ export function Card(props: ViewProps) {
           shadowRadius: 24,
           elevation: 6,
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.1)',
+          borderColor: 'rgba(255,255,255,0.05)',
         },
         style
       ]}

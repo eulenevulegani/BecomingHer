@@ -1,4 +1,4 @@
-import Colors, { PLANET_COLORS } from '@/constants/Colors';
+import Colors, { IDENTITY_COLORS } from '@/constants/Colors';
 import React, { useEffect } from 'react';
 import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -14,8 +14,8 @@ import { SerifText, Text } from '../Themed';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-interface FloatingPlanetProps {
-    pillar: string;
+interface FloatingIdentityProps {
+    identity: string;
     intention: string;
     isSelected: boolean;
     onPress: () => void;
@@ -24,32 +24,32 @@ interface FloatingPlanetProps {
     floatDelay?: number;
 }
 
-const PILLAR_VISUALS: Record<string, { color: string; hasRings?: boolean; hasMoons?: number; glow?: string }> = {
-    health: { color: PLANET_COLORS.health, glow: 'rgba(77, 182, 172, 0.3)' },
-    finances: { color: PLANET_COLORS.finances, glow: 'rgba(255, 193, 7, 0.3)' },
-    relationships: { color: PLANET_COLORS.relationships, hasMoons: 1, glow: 'rgba(236, 64, 122, 0.3)' },
-    purpose: { color: PLANET_COLORS.purpose, glow: 'rgba(239, 83, 80, 0.3)' },
-    growth: { color: PLANET_COLORS.growth, hasRings: true, glow: 'rgba(171, 71, 188, 0.3)' },
-    environment: { color: PLANET_COLORS.environment, glow: 'rgba(66, 165, 245, 0.3)' },
-    spirituality: { color: PLANET_COLORS.spirituality, hasMoons: 2, glow: 'rgba(189, 189, 189, 0.3)' },
+const IDENTITY_VISUALS: Record<string, { color: string; hasRings?: boolean; hasMoons?: number; glow?: string }> = {
+    health: { color: IDENTITY_COLORS.health, glow: 'rgba(77, 182, 172, 0.3)' },
+    finances: { color: IDENTITY_COLORS.finances, glow: 'rgba(255, 193, 7, 0.3)' },
+    relationships: { color: IDENTITY_COLORS.relationships, hasMoons: 1, glow: 'rgba(236, 64, 122, 0.3)' },
+    purpose: { color: IDENTITY_COLORS.purpose, glow: 'rgba(239, 83, 80, 0.3)' },
+    growth: { color: IDENTITY_COLORS.growth, hasRings: true, glow: 'rgba(171, 71, 188, 0.3)' },
+    environment: { color: IDENTITY_COLORS.environment, glow: 'rgba(66, 165, 245, 0.3)' },
+    spirituality: { color: IDENTITY_COLORS.spirituality, hasMoons: 2, glow: 'rgba(189, 189, 189, 0.3)' },
 };
 
-export function FloatingPlanet({
-    pillar,
+export function FloatingIdentity({
+    identity,
     intention,
     isSelected,
     onPress,
     size = 60,
     position,
     floatDelay = 0
-}: FloatingPlanetProps) {
-    const visual = PILLAR_VISUALS[pillar.toLowerCase()] || { color: Colors.cosmic.stardustGold };
+}: FloatingIdentityProps) {
+    const visual = IDENTITY_VISUALS[identity.toLowerCase()] || { color: Colors.brand.primary };
 
     // Floating animation
     const floatY = useSharedValue(0);
     const floatX = useSharedValue(0);
     const pulse = useSharedValue(0);
-    const moonOrbit = useSharedValue(0);
+    const moonRotation = useSharedValue(0);
 
     useEffect(() => {
         // Gentle floating motion
@@ -75,8 +75,8 @@ export function FloatingPlanet({
             -1,
             true
         );
-        // Moon orbit
-        moonOrbit.value = withRepeat(
+        // Moon rotation
+        moonRotation.value = withRepeat(
             withTiming(1, { duration: 6000, easing: Easing.linear }),
             -1,
             false
@@ -97,7 +97,7 @@ export function FloatingPlanet({
 
     const moonStyle = useAnimatedStyle(() => ({
         transform: [
-            { rotate: `${interpolate(moonOrbit.value, [0, 1], [0, 360])}deg` },
+            { rotate: `${interpolate(moonRotation.value, [0, 1], [0, 360])}deg` },
         ],
     }));
 
@@ -123,10 +123,10 @@ export function FloatingPlanet({
                     ]}
                 />
 
-                {/* Main planet */}
+                {/* Main identity visual */}
                 <View
                     style={[
-                        styles.planet,
+                        styles.identityVisual,
                         {
                             width: size,
                             height: size,
@@ -144,7 +144,7 @@ export function FloatingPlanet({
                     <View style={styles.shadow} />
                 </View>
 
-                {/* Rings for Saturn-like planets */}
+                {/* Rings for Saturn-like identities */}
                 {visual.hasRings && (
                     <View
                         style={[
@@ -158,11 +158,11 @@ export function FloatingPlanet({
                     />
                 )}
 
-                {/* Orbiting moons */}
+                {/* Rotating moons */}
                 {visual.hasMoons && (
                     <Animated.View
                         style={[
-                            styles.moonOrbit,
+                            styles.moonRotation,
                             { width: size * 1.4, height: size * 1.4 },
                             moonStyle
                         ]}
@@ -176,8 +176,8 @@ export function FloatingPlanet({
 
                 {/* Label */}
                 <View style={styles.labelContainer}>
-                    <Text style={[styles.pillarLabel, isSelected && { color: visual.color }]}>
-                        {pillar}
+                    <Text style={[styles.identityLabel, isSelected && { color: visual.color }]}>
+                        {identity}
                     </Text>
                     <SerifText style={[styles.intentionLabel, isSelected && { color: '#FFF' }]} numberOfLines={2}>
                         {shortName}
@@ -188,8 +188,8 @@ export function FloatingPlanet({
     );
 }
 
-// Preset positions for 7 planets in a floating constellation
-export const PLANET_POSITIONS = [
+// Preset positions for 7 identities in a floating constellation
+export const IDENTITY_POSITIONS = [
     { x: SCREEN_WIDTH * 0.08, y: 40 },   // Top left
     { x: SCREEN_WIDTH * 0.55, y: 20 },   // Top right
     { x: SCREEN_WIDTH * 0.25, y: 140 },  // Middle left
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     glow: {
         position: 'absolute',
     },
-    planet: {
+    identityVisual: {
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#FFF',
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
         opacity: 0.5,
         transform: [{ rotateX: '70deg' }],
     },
-    moonOrbit: {
+    moonRotation: {
         position: 'absolute',
         justifyContent: 'flex-start',
         alignItems: 'center',
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: 100,
     },
-    pillarLabel: {
+    identityLabel: {
         fontSize: 8,
         color: '#8E8E93',
         textTransform: 'uppercase',
